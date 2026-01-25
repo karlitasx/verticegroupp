@@ -1,22 +1,42 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Greeting from "@/components/dashboard/Greeting";
-import HabitsCard from "@/components/dashboard/HabitsCard";
-import FinanceCard from "@/components/dashboard/FinanceCard";
-import WishlistCard from "@/components/dashboard/WishlistCard";
-import StreakCard from "@/components/dashboard/StreakCard";
+import HeroSection from "@/components/dashboard/HeroSection";
+import DailyProgress from "@/components/dashboard/DailyProgress";
+import VirtualPlant from "@/components/dashboard/VirtualPlant";
+import QuickStats from "@/components/dashboard/QuickStats";
+import QuickNavigation from "@/components/dashboard/QuickNavigation";
+import WeeklySummary from "@/components/dashboard/WeeklySummary";
 
 const Dashboard = () => {
   return (
     <DashboardLayout activeNav="/">
-      <Greeting />
+      {/* Hero Section */}
+      <HeroSection />
 
-      {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <HabitsCard />
-        <FinanceCard />
-        <WishlistCard />
-        <StreakCard />
+      {/* Quick Stats Grid */}
+      <div className="mb-8">
+        <QuickStats />
       </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Daily Progress - Takes 2 columns */}
+        <div className="lg:col-span-2">
+          <DailyProgress />
+        </div>
+        
+        {/* Virtual Plant */}
+        <div>
+          <VirtualPlant />
+        </div>
+      </div>
+
+      {/* Quick Navigation */}
+      <div className="mb-8">
+        <QuickNavigation />
+      </div>
+
+      {/* Weekly Summary */}
+      <WeeklySummary />
     </DashboardLayout>
   );
 };
