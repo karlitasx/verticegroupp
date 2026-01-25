@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Sparkles, User, Mail, Lock } from "lucide-react";
 
-const AuthForm = () => {
+interface AuthFormProps {
+  onSuccess?: () => void;
+}
+
+const AuthForm = ({ onSuccess }: AuthFormProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -11,7 +15,8 @@ const AuthForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    // For demo, just call onSuccess
+    onSuccess?.();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
