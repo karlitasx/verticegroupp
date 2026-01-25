@@ -1,0 +1,215 @@
+import { useState } from "react";
+import { Plus, DollarSign } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SummaryCards from "@/components/finances/SummaryCards";
+import FinanceBarChart from "@/components/finances/FinanceBarChart";
+import CategoryDonut from "@/components/finances/CategoryDonut";
+import TransactionsList, { Transaction } from "@/components/finances/TransactionsList";
+import AddTransactionModal from "@/components/finances/AddTransactionModal";
+import FinanceFilters from "@/components/finances/FinanceFilters";
+import SavingsGoal from "@/components/finances/SavingsGoal";
+import { Button } from "@/components/ui/button";
+
+// Mock data
+const initialTransactions: Transaction[] = [
+  {
+    id: "1",
+    description: "Salário",
+    category: "Salário",
+    amount: 8500,
+    type: "income",
+    date: new Date(2025, 0, 5),
+  },
+  {
+    id: "2",
+    description: "Aluguel",
+    category: "Moradia",
+    amount: 1800,
+    type: "expense",
+    date: new Date(2025, 0, 10),
+  },
+  {
+    id: "3",
+    description: "Supermercado",
+    category: "Alimentação",
+    amount: 650,
+    type: "expense",
+    date: new Date(2025, 0, 12),
+  },
+  {
+    id: "4",
+    description: "Uber",
+    category: "Transporte",
+    amount: 85,
+    type: "expense",
+    date: new Date(2025, 0, 15),
+  },
+  {
+    id: "5",
+    description: "Cinema",
+    category: "Lazer",
+    amount: 120,
+    type: "expense",
+    date: new Date(2025, 0, 18),
+  },
+  {
+    id: "6",
+    description: "Farmácia",
+    category: "Saúde",
+    amount: 95,
+    type: "expense",
+    date: new Date(2025, 0, 20),
+  },
+  {
+    id: "7",
+    description: "Curso online",
+    category: "Educação",
+    amount: 197,
+    type: "expense",
+    date: new Date(2025, 0, 22),
+  },
+  {
+    id: "8",
+    description: "Freelance",
+    category: "Salário",
+    amount: 1500,
+    type: "income",
+    date: new Date(2025, 0, 23),
+  },
+];
+
+const categoryData = [
+  { name: "Alimentação", value: 850, color: "#f97316" },
+  { name: "Transporte", value: 320, color: "#3b82f6" },
+  { name: "Moradia", value: 1800, color: "#8b5cf6" },
+  { name: "Lazer", value: 420, color: "#ec4899" },
+  { name: "Saúde", value: 180, color: "#ef4444" },
+  { name: "Educação", value: 350, color: "#14b8a6" },
+];
+
+const Finances = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [selectedType, setSelectedType] = useState<"all" | "income" | "expense">("all");
+
+  // Calculate totals
+  const income = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const expenses = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const balance = 12450 + income - expenses;
+
+  const handleAddTransaction = (transaction: {
+    description: string;
+    category: string;
+    amount: number;
+    type: "income" | "expense";
+    date: Date;
+    recurring: boolean;
+  }) => {
+    const newTransaction: Transaction = {
+      id: Date.now().toString(),
+      ...transaction,
+    };
+    setTransactions([newTransaction, ...transactions]);
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    setTransactions(transactions.filter((t) => t.id !== id));
+  };
+
+  const handleClearFilters = () => {
+    setSelectedPeriod("month");
+    setSelectedType("all");
+    setSelectedCategory(null);
+  };
+
+  // Filter transactions by type
+  const filteredTransactions = transactions.filter((t) => {
+    if (selectedType === "all") return true;
+    return t.type === selectedType;
+  });
+
+  return (
+    <DashboardLayout activeNav="/finances">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl logo-gradient">
+            <DollarSign className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Finanças</h1>
+            <p className="text-muted-foreground">Gerencie suas receitas e despesas</p>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="logo-gradient gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Nova Transação
+        </Button>
+      </div>
+
+      {/* Summary Cards */}
+      <SummaryCards balance={balance} income={income} expenses={expenses} />
+
+      {/* Filters */}
+      <div className="mt-6">
+        <FinanceFilters
+          selectedPeriod={selectedPeriod}
+          selectedType={selectedType}
+          onPeriodChange={setSelectedPeriod}
+          onTypeChange={setSelectedType}
+          onClearFilters={handleClearFilters}
+        />
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
+        {/* Left Column - Charts */}
+        <div className="xl:col-span-2 space-y-6">
+          <FinanceBarChart />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CategoryDonut
+              data={categoryData}
+              selectedCategory={selectedCategory}
+              onCategoryClick={setSelectedCategory}
+            />
+            <SavingsGoal
+              goal={10000}
+              current={4300}
+              monthlyExpenses={expenses}
+              budgetLimit={4000}
+            />
+          </div>
+        </div>
+
+        {/* Right Column - Transactions */}
+        <div className="xl:col-span-1">
+          <TransactionsList
+            transactions={filteredTransactions}
+            onDelete={handleDeleteTransaction}
+            categoryFilter={selectedCategory}
+          />
+        </div>
+      </div>
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddTransaction}
+      />
+    </DashboardLayout>
+  );
+};
+
+export default Finances;
