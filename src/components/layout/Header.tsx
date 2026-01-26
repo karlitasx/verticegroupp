@@ -1,6 +1,28 @@
-import { Sparkles, Search, Bell, User } from "lucide-react";
+import { Sparkles, Search, Bell, User, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Até logo! 👋",
+      description: "Você saiu da sua conta",
+    });
+    navigate("/auth", { replace: true });
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 glass-card border-b border-glass-border flex items-center px-4 md:px-6">
       {/* Logo */}
@@ -28,16 +50,48 @@ const Header = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-3 ml-auto">
-        <button className="md:hidden p-2 rounded-lg hover:bg-glass-hover transition-colors">
+        <button className="md:hidden p-2 rounded-lg hover:bg-glass-hover transition-all duration-300">
           <Search className="w-5 h-5 text-muted-foreground" />
         </button>
-        <button className="relative p-2 rounded-lg hover:bg-glass-hover transition-colors">
+        <button className="relative p-2 rounded-lg hover:bg-glass-hover transition-all duration-300">
           <Bell className="w-5 h-5 text-muted-foreground" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
         </button>
-        <button className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center hover:scale-105 transition-transform">
-          <User className="w-4 h-4 text-white" />
-        </button>
+        
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center hover:scale-105 transition-all duration-300">
+              <User className="w-4 h-4 text-white" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 glass-card border-glass-border">
+            {user && (
+              <>
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium truncate">{user.email}</p>
+                  <p className="text-xs text-muted-foreground">Conta VidaFlow</p>
+                </div>
+                <DropdownMenuSeparator className="bg-glass-border" />
+              </>
+            )}
+            <DropdownMenuItem 
+              onClick={() => navigate("/profile")}
+              className="cursor-pointer hover:bg-glass-hover transition-all duration-300"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Perfil
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-glass-border" />
+            <DropdownMenuItem 
+              onClick={handleSignOut}
+              className="cursor-pointer text-destructive hover:bg-destructive/10 transition-all duration-300"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
