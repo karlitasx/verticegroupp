@@ -124,6 +124,25 @@
   .animation-delay-300 {
     animation-delay: 300ms;
   }
+
+  /* Smooth scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Hover scale utility */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  /* Ripple effect container */
+  .ripple-container {
+    @apply relative overflow-hidden;
+  }
+
+  .ripple-effect {
+    @apply absolute rounded-full bg-white/30 animate-ripple pointer-events-none;
+  }
 }
 
 @keyframes fade-in {
