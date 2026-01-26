@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Star, ArrowUpDown } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import WishCard, { Wish } from "@/components/wishlist/WishCard";
 import AddWishModal from "@/components/wishlist/AddWishModal";
 import WishCalculator from "@/components/wishlist/WishCalculator";
 import CompletedWishes from "@/components/wishlist/CompletedWishes";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,71 +14,46 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Mock data
-const initialWishes: Wish[] = [
-  {
-    id: "1",
-    name: "MacBook Pro M3",
-    totalValue: 15000,
-    savedValue: 8500,
-    priority: "high",
-    category: "Tech",
-    imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400",
-    link: "https://apple.com",
-    createdAt: new Date(2024, 10, 1),
-    completed: false,
-  },
-  {
-    id: "2",
-    name: "Viagem para Europa",
-    totalValue: 20000,
-    savedValue: 5000,
-    priority: "medium",
-    category: "Viagem",
-    imageUrl: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400",
-    createdAt: new Date(2024, 11, 15),
-    completed: false,
-  },
-  {
-    id: "3",
-    name: "Curso de Inglês Avançado",
-    totalValue: 3500,
-    savedValue: 2800,
-    priority: "high",
-    category: "Curso",
-    createdAt: new Date(2024, 9, 1),
-    completed: false,
-  },
-  {
-    id: "4",
-    name: "AirPods Pro",
-    totalValue: 2500,
-    savedValue: 2500,
-    priority: "low",
-    category: "Tech",
-    imageUrl: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400",
-    createdAt: new Date(2024, 8, 1),
-    completed: true,
-  },
-  {
-    id: "5",
-    name: "Academia 1 ano",
-    totalValue: 2400,
-    savedValue: 800,
-    priority: "medium",
-    category: "Saúde",
-    createdAt: new Date(2025, 0, 10),
-    completed: false,
-  },
-];
+const STORAGE_KEY = "vidaflow_wishlist";
 
 type SortOption = "priority" | "progress" | "value-asc" | "value-desc" | "date";
 
-const Wishlist = () => {
-  const [wishes, setWishes] = useState<Wish[]>(initialWishes);
+interface WishlistTabProps {
+  onSavingsTransaction?: (amount: number, wishName: string) => void;
+}
+
+const WishlistTab = ({ onSavingsTransaction }: WishlistTabProps) => {
+  const [wishes, setWishes] = useState<Wish[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWish, setEditingWish] = useState<Wish | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("priority");
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Convert date strings back to Date objects
+        const withDates = parsed.map((w: Wish & { createdAt: string }) => ({
+          ...w,
+          createdAt: new Date(w.createdAt),
+        }));
+        setWishes(withDates);
+      }
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes));
+    }
+  }, [wishes, isLoaded]);
 
   // Calculations
   const activeWishes = wishes.filter((w) => !w.completed);
@@ -121,19 +96,33 @@ const Wishlist = () => {
   };
 
   const handleAddValue = (id: string, value: number) => {
+    const wish = wishes.find(w => w.id === id);
+    
     setWishes(
       wishes.map((w) => {
         if (w.id === id) {
           const newSaved = w.savedValue + value;
+          const isNowCompleted = newSaved >= w.totalValue;
+          
           return {
             ...w,
             savedValue: newSaved,
-            completed: newSaved >= w.totalValue,
+            completed: isNowCompleted,
           };
         }
         return w;
       })
     );
+
+    // Create automatic transaction
+    if (onSavingsTransaction && wish) {
+      onSavingsTransaction(value, wish.name);
+    }
+
+    toast({
+      title: "Economia registrada! 💰",
+      description: `Você economizou ${formatCurrency(value)} para "${wish?.name}"`,
+    });
   };
 
   const handleSaveWish = (wishData: Omit<Wish, "id" | "createdAt" | "completed">) => {
@@ -176,70 +165,68 @@ const Wishlist = () => {
   };
 
   return (
-    <DashboardLayout activeNav="/wishlist">
-      {/* Page Header */}
-      <div className="space-y-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl logo-gradient">
-              <Star className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Minha Wishlist</h1>
-              <p className="text-muted-foreground">
-                {activeWishes.length} desejos ativos
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Header with Add Button */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl logo-gradient">
+            <Star className="w-6 h-6 text-white" />
           </div>
-
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            className="logo-gradient gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Novo Desejo
-          </Button>
+          <div>
+            <h2 className="text-xl font-bold">Meus Objetivos</h2>
+            <p className="text-sm text-muted-foreground">
+              {activeWishes.length} objetivos ativos
+            </p>
+          </div>
         </div>
 
-        {/* Summary Stats */}
-        <div className="glass-card p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-              <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Já Economizado</p>
-              <p className="text-2xl font-bold text-green-400">
-                {formatCurrency(totalSaved)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Falta</p>
-              <p className="text-2xl font-bold text-primary">
-                {formatCurrency(totalRemaining)}
-              </p>
-            </div>
-          </div>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="logo-gradient gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Novo Objetivo
+        </Button>
+      </div>
 
-          {/* Overall Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progresso Geral</span>
-              <span className="font-medium">{overallProgress.toFixed(1)}%</span>
-            </div>
-            <div className="relative h-4 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
+      {/* Summary Stats */}
+      <div className="glass-card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Já Economizado</p>
+            <p className="text-2xl font-bold text-green-400">
+              {formatCurrency(totalSaved)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Falta</p>
+            <p className="text-2xl font-bold text-primary">
+              {formatCurrency(totalRemaining)}
+            </p>
+          </div>
+        </div>
+
+        {/* Overall Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Progresso Geral</span>
+            <span className="font-medium">{overallProgress.toFixed(1)}%</span>
+          </div>
+          <div className="relative h-4 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+              style={{ width: `${overallProgress}%` }}
+            />
           </div>
         </div>
       </div>
 
       {/* Sort Controls */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="bg-glass border-white/20">
@@ -302,16 +289,16 @@ const Wishlist = () => {
             <div className="glass-card p-12 text-center">
               <span className="text-6xl mb-4 block">🌟</span>
               <h3 className="text-xl font-semibold mb-2">
-                Sua wishlist está vazia
+                Nenhum objetivo ainda
               </h3>
               <p className="text-muted-foreground mb-4">
-                Adicione seu primeiro desejo e comece a economizar!
+                Adicione seu primeiro objetivo e comece a economizar!
               </p>
               <Button
                 onClick={() => setIsModalOpen(true)}
                 className="logo-gradient"
               >
-                Adicionar Desejo
+                Adicionar Objetivo
               </Button>
             </div>
           )}
@@ -331,8 +318,8 @@ const Wishlist = () => {
         onSave={handleSaveWish}
         editingWish={editingWish}
       />
-    </DashboardLayout>
+    </div>
   );
 };
 
-export default Wishlist;
+export default WishlistTab;

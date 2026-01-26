@@ -49,7 +49,7 @@ const defaultStats: UserStats = {
 const defaultState: UserAchievementState = {
   unlockedAchievements: [],
   totalPoints: 0,
-  level: 'Iniciante',
+  level: 'Novata',
   levelProgress: 0,
   lastChecked: new Date().toISOString(),
 };
@@ -57,10 +57,15 @@ const defaultState: UserAchievementState = {
 const calculateLevel = (points: number): { level: UserLevel; progress: number } => {
   const levels = Object.entries(LEVEL_THRESHOLDS) as [UserLevel, number][];
   
-  for (let i = levels.length - 1; i >= 0; i--) {
-    const [level, threshold] = levels[i];
+  // Sort by threshold descending to find the correct level
+  const sortedLevels = [...levels].sort((a, b) => b[1] - a[1]);
+  
+  for (const [level, threshold] of sortedLevels) {
     if (points >= threshold) {
-      const nextLevel = levels[i + 1];
+      // Find next level
+      const currentIndex = levels.findIndex(([l]) => l === level);
+      const nextLevel = levels[currentIndex + 1];
+      
       if (nextLevel) {
         const progress = ((points - threshold) / (nextLevel[1] - threshold)) * 100;
         return { level, progress: Math.min(progress, 100) };
@@ -69,7 +74,7 @@ const calculateLevel = (points: number): { level: UserLevel; progress: number } 
     }
   }
   
-  return { level: 'Iniciante', progress: 0 };
+  return { level: 'Novata', progress: 0 };
 };
 
 export const useAchievements = () => {
@@ -77,6 +82,7 @@ export const useAchievements = () => {
   const [stats, setStats] = useState<UserStats>(defaultStats);
   const [isLoaded, setIsLoaded] = useState(false);
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
+  const [levelUpInfo, setLevelUpInfo] = useState<{ level: UserLevel; points: number } | null>(null);
 
   // Load from localStorage
   useEffect(() => {
@@ -172,21 +178,27 @@ export const useAchievements = () => {
     
     if (newUnlocks.length > 0) {
       const newPoints = state.totalPoints + newUnlocks.reduce((sum, a) => sum + a.points, 0);
-      const { level, progress } = calculateLevel(newPoints);
+      const { level: newLevel, progress } = calculateLevel(newPoints);
+      const previousLevel = state.level;
       
       setState(prev => ({
         ...prev,
         unlockedAchievements: [...prev.unlockedAchievements, ...newUnlocks.map(a => a.id)],
         totalPoints: newPoints,
-        level,
+        level: newLevel,
         levelProgress: progress,
         lastChecked: new Date().toISOString(),
       }));
       
+      // Check for level up
+      if (newLevel !== previousLevel) {
+        setLevelUpInfo({ level: newLevel, points: newPoints });
+      }
+      
       // Show the first newly unlocked achievement
       setNewlyUnlocked(newUnlocks[0]);
     }
-  }, [state.unlockedAchievements, state.totalPoints, stats, checkRequirement]);
+  }, [state.unlockedAchievements, state.totalPoints, state.level, stats, checkRequirement]);
 
   // Update stats and check achievements
   const updateStats = useCallback((updates: Partial<UserStats>) => {
@@ -221,6 +233,11 @@ export const useAchievements = () => {
   // Dismiss newly unlocked notification
   const dismissUnlocked = useCallback(() => {
     setNewlyUnlocked(null);
+  }, []);
+
+  // Dismiss level up notification
+  const dismissLevelUp = useCallback(() => {
+    setLevelUpInfo(null);
   }, []);
 
   // Get all achievements with unlock status
@@ -354,10 +371,12 @@ export const useAchievements = () => {
     stats,
     isLoaded,
     newlyUnlocked,
+    levelUpInfo,
     updateStats,
     incrementStat,
     incrementCategoryCompletion,
     dismissUnlocked,
+    dismissLevelUp,
     getAllAchievements,
     getAchievementsByCategory,
     getUnlockedCount,

@@ -10,12 +10,12 @@ export type AchievementCategory =
 // Achievement Rarity
 export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
-// User Levels
+// User Levels - Updated
 export type UserLevel = 
+  | 'Novata' 
   | 'Iniciante' 
-  | 'Aprendiz' 
-  | 'Intermediário' 
-  | 'Avançado' 
+  | 'Intermediária' 
+  | 'Avançada' 
   | 'Expert' 
   | 'Mestre';
 
@@ -62,14 +62,34 @@ export interface UserAchievementState {
   lastChecked: string;
 }
 
-// Level thresholds
+// Level thresholds - Updated with new values
 export const LEVEL_THRESHOLDS: Record<UserLevel, number> = {
-  'Iniciante': 0,
-  'Aprendiz': 100,
-  'Intermediário': 300,
-  'Avançado': 600,
-  'Expert': 1000,
-  'Mestre': 1500,
+  'Novata': 0,
+  'Iniciante': 101,
+  'Intermediária': 501,
+  'Avançada': 1501,
+  'Expert': 3001,
+  'Mestre': 6001,
+};
+
+// Level emojis
+export const LEVEL_EMOJIS: Record<UserLevel, string> = {
+  'Novata': '⚪',
+  'Iniciante': '🟢',
+  'Intermediária': '🔵',
+  'Avançada': '🟣',
+  'Expert': '🟠',
+  'Mestre': '🔴',
+};
+
+// Level colors
+export const LEVEL_COLORS: Record<UserLevel, string> = {
+  'Novata': 'from-gray-400 to-gray-500',
+  'Iniciante': 'from-green-400 to-green-600',
+  'Intermediária': 'from-blue-400 to-blue-600',
+  'Avançada': 'from-purple-400 to-purple-600',
+  'Expert': 'from-orange-400 to-orange-600',
+  'Mestre': 'from-red-400 to-red-600',
 };
 
 // All achievements definition

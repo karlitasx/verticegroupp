@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { useAchievements } from "@/hooks/useAchievements";
 import AchievementUnlockModal from "@/components/achievements/AchievementUnlockModal";
+import LevelUpModal from "@/components/achievements/LevelUpModal";
 
 type AchievementsContextType = ReturnType<typeof useAchievements>;
 
@@ -27,6 +28,12 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
       <AchievementUnlockModal
         achievement={achievements.newlyUnlocked}
         onClose={achievements.dismissUnlocked}
+      />
+      <LevelUpModal
+        isOpen={!!achievements.levelUpInfo}
+        onClose={achievements.dismissLevelUp}
+        newLevel={achievements.levelUpInfo?.level || 'Novata'}
+        totalPoints={achievements.levelUpInfo?.points || 0}
       />
     </AchievementsContext.Provider>
   );
