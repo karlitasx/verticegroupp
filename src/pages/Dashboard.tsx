@@ -5,6 +5,7 @@ import VirtualPlant from "@/components/dashboard/VirtualPlant";
 import QuickStats from "@/components/dashboard/QuickStats";
 import QuickNavigation from "@/components/dashboard/QuickNavigation";
 import WeeklySummary from "@/components/dashboard/WeeklySummary";
+import RecentAchievements from "@/components/dashboard/RecentAchievements";
 
 const Dashboard = () => {
   return (
@@ -30,8 +31,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Navigation */}
-      <div className="mb-8">
+      {/* Achievements & Navigation Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Recent Achievements */}
+        <RecentAchievements />
+        
+        {/* Quick Navigation */}
         <QuickNavigation />
       </div>
 

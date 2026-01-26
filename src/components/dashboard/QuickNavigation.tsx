@@ -20,20 +20,20 @@ interface NavButtonProps {
 const NavButton = ({ icon, label, description, gradient, onClick }: NavButtonProps) => (
   <button
     onClick={onClick}
-    className={`glass-card p-4 text-left group hover:scale-105 transition-all duration-300 relative overflow-hidden`}
+    className={`glass-card p-4 text-left group hover:scale-105 active:scale-95 transition-all duration-300 relative overflow-hidden`}
   >
     {/* Background gradient on hover */}
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
+    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
     
     <div className="relative z-10 flex items-center gap-4">
-      <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} group-hover:scale-110 transition-transform`}>
+      <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm md:text-base truncate">{label}</p>
+        <p className="font-semibold text-sm md:text-base truncate group-hover:text-primary transition-colors">{label}</p>
         <p className="text-xs text-muted-foreground truncate">{description}</p>
       </div>
-      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
+      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all duration-300" />
     </div>
   </button>
 );
@@ -75,7 +75,7 @@ const QuickNavigation = () => {
       label: "Comunidade",
       description: "Conecte-se com outros",
       gradient: "from-orange-500 to-amber-600",
-      path: "/",
+      path: "/community",
     },
     {
       icon: <User className="w-6 h-6 text-white" />,

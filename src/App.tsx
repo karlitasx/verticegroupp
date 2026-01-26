@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AchievementsProvider } from "@/contexts/AchievementsContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -21,11 +22,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <AchievementsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+        <NotificationsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
               {/* Auth route - only for unauthenticated users */}
               <Route path="/auth" element={<Auth />} />
               
@@ -66,9 +68,10 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </AchievementsProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+      </NotificationsProvider>
+    </AchievementsProvider>
+  </AuthProvider>
+</QueryClientProvider>
 );
 
 export default App;

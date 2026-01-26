@@ -11,9 +11,9 @@ interface StatCardProps {
 }
 
 const StatCard = ({ icon, label, value, subValue, trend, trendValue, gradient }: StatCardProps) => (
-  <div className="glass-card p-4 hover:scale-105 transition-transform cursor-pointer group">
+  <div className="glass-card p-4 hover:scale-105 transition-all duration-300 cursor-pointer group active:scale-95">
     <div className="flex items-start justify-between mb-3">
-      <div className={`p-2 rounded-lg bg-gradient-to-br ${gradient} group-hover:scale-110 transition-transform`}>
+      <div className={`p-2 rounded-lg bg-gradient-to-br ${gradient} group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
         {icon}
       </div>
       {trend && (
@@ -25,11 +25,11 @@ const StatCard = ({ icon, label, value, subValue, trend, trendValue, gradient }:
         </div>
       )}
     </div>
-    <p className="text-2xl font-bold">{value}</p>
+    <p className="text-2xl font-bold group-hover:text-primary transition-colors">{value}</p>
     <p className="text-xs text-muted-foreground">{label}</p>
     {subValue && (
       <p className="text-sm text-primary mt-1 flex items-center gap-1">
-        <Flame className="w-3 h-3" />
+        <Flame className="w-3 h-3 animate-pulse" />
         {subValue}
       </p>
     )}
