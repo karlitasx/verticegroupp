@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const quotes = [
   "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
@@ -9,13 +10,18 @@ const quotes = [
 ];
 
 const Greeting = () => {
+  const { user } = useAuth();
   const hour = new Date().getHours();
   let greeting = "Boa noite";
   if (hour < 12) greeting = "Bom dia";
   else if (hour < 18) greeting = "Boa tarde";
 
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-  const userName = "Usuário"; // Replace with actual user name
+  
+  // Get user's name from metadata (set during signup) or extract from email
+  const userName = user?.user_metadata?.full_name 
+    || user?.email?.split('@')[0] 
+    || "Usuário";
 
   return (
     <div className="mb-8 animate-fade-in">
