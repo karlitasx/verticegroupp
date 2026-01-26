@@ -21,6 +21,7 @@ const categories = [
   { id: "productivity", name: "Produtividade", color: "bg-blue-500", emoji: "⚡" },
   { id: "spiritual", name: "Espiritual", color: "bg-purple-500", emoji: "🧘" },
   { id: "financial", name: "Financeiro", color: "bg-yellow-500", emoji: "💰" },
+  { id: "selfcare", name: "Autocuidado", color: "bg-pink-500", emoji: "🌸" },
 ];
 
 const frequencies = [
@@ -29,7 +30,7 @@ const frequencies = [
   { id: "custom", name: "Personalizado" },
 ];
 
-const emojis = ["💧", "🏃", "📚", "🧘", "💰", "🎯", "💪", "🌙", "☀️", "🍎", "✍️", "🎨"];
+const emojis = ["💧", "🏃", "📚", "🧘", "💰", "🎯", "💪", "🌙", "☀️", "🍎", "✍️", "🎨", "🌸", "💆", "🧠", "❤️"];
 
 const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
   const [name, setName] = useState("");
@@ -70,11 +71,11 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md glass-card p-6 animate-scale-in">
+      <div className="relative w-full max-w-md glass-card p-6 animate-scale-in max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-glass-hover transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-glass-hover transition-all duration-300"
         >
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -94,10 +95,10 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
                   type="button"
                   onClick={() => setEmoji(e)}
                   className={cn(
-                    "w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all",
+                    "w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all duration-300",
                     emoji === e
                       ? "bg-primary/30 ring-2 ring-primary scale-110"
-                      : "bg-glass hover:bg-glass-hover"
+                      : "bg-glass hover:bg-glass-hover hover:scale-105"
                   )}
                 >
                   {e}
@@ -120,7 +121,7 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
             />
           </div>
 
-          {/* Category selector */}
+          {/* Category selector - Now with 5 categories */}
           <div>
             <label className="text-sm text-muted-foreground mb-2 block">
               Categoria
@@ -132,13 +133,19 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
                   type="button"
                   onClick={() => setCategory(cat.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-3 rounded-xl transition-all",
+                    "flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300",
                     category === cat.id
                       ? `${cat.color}/30 ring-2 ring-current`
                       : "bg-glass hover:bg-glass-hover"
                   )}
                   style={{
-                    color: category === cat.id ? `var(--${cat.color})` : undefined,
+                    color: category === cat.id 
+                      ? cat.id === "selfcare" ? "rgb(236, 72, 153)" // pink-500
+                      : cat.id === "health" ? "rgb(34, 197, 94)" // green-500
+                      : cat.id === "productivity" ? "rgb(59, 130, 246)" // blue-500
+                      : cat.id === "spiritual" ? "rgb(168, 85, 247)" // purple-500
+                      : "rgb(234, 179, 8)" // yellow-500
+                      : undefined,
                   }}
                 >
                   <span>{cat.emoji}</span>
@@ -160,7 +167,7 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
                   type="button"
                   onClick={() => setFrequency(freq.id)}
                   className={cn(
-                    "flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                    "flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
                     frequency === freq.id
                       ? "btn-gradient"
                       : "bg-glass hover:bg-glass-hover text-muted-foreground"
@@ -190,7 +197,7 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 rounded-xl bg-glass hover:bg-glass-hover transition-colors font-medium"
+              className="flex-1 px-4 py-3 rounded-xl bg-glass hover:bg-glass-hover transition-all duration-300 font-medium"
             >
               Cancelar
             </button>

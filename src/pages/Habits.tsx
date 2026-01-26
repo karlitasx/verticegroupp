@@ -1,62 +1,13 @@
-import { useState } from "react";
-import { Target, Plus, Filter, BarChart3, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Target, Plus, Filter, BarChart3 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import HabitCard, { Habit } from "@/components/habits/HabitCard";
+import HabitCard from "@/components/habits/HabitCard";
 import AddHabitModal, { NewHabit } from "@/components/habits/AddHabitModal";
 import HabitStats from "@/components/habits/HabitStats";
+import { useHabits, HabitData } from "@/hooks/useHabits";
 import { cn } from "@/lib/utils";
-
-const initialHabits: Habit[] = [
-  {
-    id: "1",
-    name: "Beber 2L de água",
-    emoji: "💧",
-    category: "health",
-    categoryColor: "green",
-    streak: 12,
-    reminderTime: "08:00",
-    completed: false,
-  },
-  {
-    id: "2",
-    name: "Meditação 10 minutos",
-    emoji: "🧘",
-    category: "spiritual",
-    categoryColor: "purple",
-    streak: 5,
-    reminderTime: "06:30",
-    completed: true,
-  },
-  {
-    id: "3",
-    name: "Ler 30 páginas",
-    emoji: "📚",
-    category: "productivity",
-    categoryColor: "blue",
-    streak: 8,
-    reminderTime: "21:00",
-    completed: false,
-  },
-  {
-    id: "4",
-    name: "Registrar despesas",
-    emoji: "💰",
-    category: "financial",
-    categoryColor: "yellow",
-    streak: 3,
-    completed: false,
-  },
-  {
-    id: "5",
-    name: "Exercício 30min",
-    emoji: "🏃",
-    category: "health",
-    categoryColor: "green",
-    streak: 15,
-    reminderTime: "07:00",
-    completed: true,
-  },
-];
+import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type FilterType = "all" | "completed" | "pending" | string;
 
@@ -71,61 +22,114 @@ const categoryFilters = [
   { id: "productivity", name: "Produtividade", emoji: "⚡" },
   { id: "spiritual", name: "Espiritual", emoji: "🧘" },
   { id: "financial", name: "Financeiro", emoji: "💰" },
+  { id: "selfcare", name: "Autocuidado", emoji: "🌸" },
 ];
 
 const Habits = () => {
-  const [habits, setHabits] = useState<Habit[]>(initialHabits);
+  const { habits, isLoaded, toggleHabit, addHabit, deleteHabit, getStats } = useHabits();
   const [filter, setFilter] = useState<FilterType>("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
 
-  const completedCount = habits.filter((h) => h.completed).length;
-  const totalCount = habits.length;
-  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const stats = getStats();
 
   const filteredHabits = habits.filter((habit) => {
     if (filter === "completed") return habit.completed;
     if (filter === "pending") return !habit.completed;
-    if (["health", "productivity", "spiritual", "financial"].includes(filter)) {
+    if (["health", "productivity", "spiritual", "financial", "selfcare"].includes(filter)) {
       return habit.category === filter;
     }
     return true;
   });
 
   const handleToggle = (id: string) => {
-    setHabits((prev) =>
-      prev.map((h) =>
-        h.id === id
-          ? { ...h, completed: !h.completed, streak: h.completed ? h.streak : h.streak + 1 }
-          : h
-      )
-    );
+    const result = toggleHabit(id);
+    
+    if (result.streakIncreased) {
+      const habit = habits.find(h => h.id === id);
+      if (habit && result.newStreak % 7 === 0 && result.newStreak > 0) {
+        toast({
+          title: `🔥 Streak de ${result.newStreak} dias!`,
+          description: `Parabéns! Você ganhou +100 pontos bônus!`,
+        });
+      }
+    }
+    
+    return result;
   };
 
   const handleAdd = (newHabit: NewHabit) => {
-    const habit: Habit = {
-      id: Date.now().toString(),
+    addHabit({
       name: newHabit.name,
       emoji: newHabit.emoji,
       category: newHabit.category,
       categoryColor: newHabit.category,
-      streak: 0,
       reminderTime: newHabit.reminderTime,
-      completed: false,
-    };
-    setHabits((prev) => [habit, ...prev]);
+    });
+
+    toast({
+      title: "Hábito criado! 🌱",
+      description: `"${newHabit.name}" foi adicionado à sua lista.`,
+    });
   };
 
   const handleDelete = (id: string) => {
-    setHabits((prev) => prev.filter((h) => h.id !== id));
+    const habit = habits.find(h => h.id === id);
+    deleteHabit(id);
+    
+    toast({
+      title: "Hábito removido",
+      description: habit ? `"${habit.name}" foi deletado.` : "Hábito deletado.",
+    });
   };
 
   const handleStats = (id: string) => {
     setSelectedHabitId(id);
     setShowStats(true);
   };
+
+  // Convert HabitData to Habit format for HabitCard
+  const convertToHabitCardFormat = (habit: HabitData) => ({
+    id: habit.id,
+    name: habit.name,
+    emoji: habit.emoji,
+    category: habit.category,
+    categoryColor: habit.categoryColor,
+    streak: habit.streak,
+    bestStreak: habit.bestStreak,
+    reminderTime: habit.reminderTime,
+    completed: habit.completed,
+  });
+
+  // Loading state
+  if (!isLoaded) {
+    return (
+      <DashboardLayout activeNav="/habits">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Skeleton className="w-14 h-14 rounded-xl" />
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          <Skeleton className="h-20 w-full mb-6 rounded-2xl" />
+          <div className="flex gap-2 mb-6">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-10 w-24 rounded-xl" />
+            ))}
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout activeNav="/habits">
@@ -139,14 +143,14 @@ const Habits = () => {
             <div>
               <h1 className="text-2xl font-bold">Meus Hábitos</h1>
               <p className="text-sm text-muted-foreground">
-                {completedCount} de {totalCount} concluídos hoje
+                {stats.completedToday} de {stats.totalHabits} concluídos hoje
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn-gradient px-5 py-3 rounded-xl flex items-center justify-center gap-2"
+            className="btn-gradient px-5 py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-105 transition-all duration-300"
           >
             <Plus className="w-5 h-5" />
             <span className="font-medium">Novo Hábito</span>
@@ -157,12 +161,12 @@ const Habits = () => {
         <div className="glass-card p-4 mb-6 animate-slide-up">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">Progresso do dia</span>
-            <span className="font-semibold">{progressPercent}%</span>
+            <span className="font-semibold">{stats.progressPercent}%</span>
           </div>
           <div className="h-3 rounded-full bg-glass overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: `${stats.progressPercent}%` }}
             />
           </div>
         </div>
@@ -174,10 +178,10 @@ const Habits = () => {
               key={f.id}
               onClick={() => setFilter(f.id)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
                 filter === f.id
                   ? "btn-gradient"
-                  : "bg-glass hover:bg-glass-hover text-muted-foreground"
+                  : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
               )}
             >
               {f.name}
@@ -189,10 +193,10 @@ const Habits = () => {
             <button
               onClick={() => setShowCategoryFilter(!showCategoryFilter)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
-                ["health", "productivity", "spiritual", "financial"].includes(filter)
+                "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
+                ["health", "productivity", "spiritual", "financial", "selfcare"].includes(filter)
                   ? "btn-gradient"
-                  : "bg-glass hover:bg-glass-hover text-muted-foreground"
+                  : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
               )}
             >
               <Filter className="w-4 h-4" />
@@ -214,7 +218,7 @@ const Habits = () => {
                         setShowCategoryFilter(false);
                       }}
                       className={cn(
-                        "w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-colors",
+                        "w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-all duration-300",
                         filter === cat.id && "text-primary"
                       )}
                     >
@@ -231,10 +235,10 @@ const Habits = () => {
           <button
             onClick={() => setShowStats(!showStats)}
             className={cn(
-              "ml-auto px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
+              "ml-auto px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
               showStats
                 ? "btn-gradient"
-                : "bg-glass hover:bg-glass-hover text-muted-foreground"
+                : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
             )}
           >
             <BarChart3 className="w-4 h-4" />
@@ -244,7 +248,7 @@ const Habits = () => {
 
         {/* Stats Section */}
         {showStats && (
-          <div className="mb-6">
+          <div className="mb-6 animate-scale-in">
             <HabitStats habitId={selectedHabitId || "all"} />
           </div>
         )}
@@ -263,7 +267,7 @@ const Habits = () => {
               {filter === "all" && (
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="btn-gradient px-5 py-2 rounded-xl inline-flex items-center gap-2"
+                  className="btn-gradient px-5 py-2 rounded-xl inline-flex items-center gap-2 hover:scale-105 transition-all duration-300"
                 >
                   <Plus className="w-4 h-4" />
                   Adicionar Hábito
@@ -278,7 +282,7 @@ const Habits = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <HabitCard
-                  habit={habit}
+                  habit={convertToHabitCardFormat(habit)}
                   onToggle={handleToggle}
                   onEdit={(id) => console.log("Edit", id)}
                   onDelete={handleDelete}
