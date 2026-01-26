@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Target, Plus, Filter, BarChart3 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import HabitCard from "@/components/habits/HabitCard";
 import AddHabitModal, { NewHabit } from "@/components/habits/AddHabitModal";
 import HabitStats from "@/components/habits/HabitStats";
 import { useHabits, HabitData } from "@/hooks/useHabits";
+import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,7 @@ const categoryFilters = [
 
 const Habits = () => {
   const { habits, isLoaded, toggleHabit, addHabit, deleteHabit, getStats } = useHabits();
+  const { incrementStat, incrementCategoryCompletion, updateStats } = useAchievementsContext();
   const [filter, setFilter] = useState<FilterType>("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -45,11 +47,26 @@ const Habits = () => {
   });
 
   const handleToggle = (id: string) => {
+    const habit = habits.find(h => h.id === id);
     const result = toggleHabit(id);
     
-    if (result.streakIncreased) {
-      const habit = habits.find(h => h.id === id);
-      if (habit && result.newStreak % 7 === 0 && result.newStreak > 0) {
+    if (result.streakIncreased && habit) {
+      // Update achievements stats
+      incrementStat('habitsCompleted');
+      incrementCategoryCompletion(habit.category);
+      
+      // Update longest streak
+      if (result.newStreak > stats.longestStreak) {
+        updateStats({ longestStreak: result.newStreak });
+      }
+      
+      // Check for perfect day
+      const completedAfterToggle = habits.filter(h => h.id === id ? true : h.completed).length;
+      if (completedAfterToggle === habits.length) {
+        incrementStat('perfectDays');
+      }
+      
+      if (result.newStreak % 7 === 0 && result.newStreak > 0) {
         toast({
           title: `🔥 Streak de ${result.newStreak} dias!`,
           description: `Parabéns! Você ganhou +100 pontos bônus!`,
@@ -68,6 +85,9 @@ const Habits = () => {
       categoryColor: newHabit.category,
       reminderTime: newHabit.reminderTime,
     });
+
+    // Update achievements stats
+    incrementStat('habitsCreated');
 
     toast({
       title: "Hábito criado! 🌱",
