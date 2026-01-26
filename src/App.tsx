@@ -10,7 +10,6 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Habits from "./pages/Habits";
 import Finances from "./pages/Finances";
-import Wishlist from "./pages/Wishlist";
 import Community from "./pages/Community";
 import SelfCare from "./pages/SelfCare";
 import Achievements from "./pages/Achievements";
@@ -44,11 +43,6 @@ const App = () => (
               <Route path="/finances" element={
                 <ProtectedRoute>
                   <Finances />
-                </ProtectedRoute>
-              } />
-              <Route path="/wishlist" element={
-                <ProtectedRoute>
-                  <Wishlist />
                 </ProtectedRoute>
               } />
               <Route path="/community" element={
