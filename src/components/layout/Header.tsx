@@ -1,4 +1,4 @@
-import { Sparkles, Search, Bell, User, LogOut } from "lucide-react";
+import { Sparkles, Search, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -50,13 +51,12 @@ const Header = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-3 ml-auto">
-        <button className="md:hidden p-2 rounded-lg hover:bg-glass-hover transition-all duration-300">
+        <button className="md:hidden p-2 rounded-lg hover:bg-glass-hover transition-all duration-300 hover:scale-105">
           <Search className="w-5 h-5 text-muted-foreground" />
         </button>
-        <button className="relative p-2 rounded-lg hover:bg-glass-hover transition-all duration-300">
-          <Bell className="w-5 h-5 text-muted-foreground" />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
-        </button>
+        
+        {/* Notification Dropdown */}
+        <NotificationDropdown />
         
         {/* User Menu */}
         <DropdownMenu>
