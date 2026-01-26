@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Flame, Clock, MoreVertical, Edit, Trash2, BarChart3 } from "lucide-react";
+import { Check, Flame, Clock, MoreVertical, Edit, Trash2, BarChart3, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
@@ -10,13 +10,14 @@ export interface Habit {
   category: string;
   categoryColor: string;
   streak: number;
+  bestStreak?: number;
   reminderTime?: string;
   completed: boolean;
 }
 
 interface HabitCardProps {
   habit: Habit;
-  onToggle: (id: string) => void;
+  onToggle: (id: string) => { newStreak: number; streakIncreased: boolean };
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onStats: (id: string) => void;
@@ -25,6 +26,9 @@ interface HabitCardProps {
 const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
+  const [pointsEarned, setPointsEarned] = useState(0);
+  const [streakAnimation, setStreakAnimation] = useState(false);
 
   const handleToggle = () => {
     if (!habit.completed) {
@@ -38,8 +42,18 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
         colors: ["#a855f7", "#ec4899", "#3b82f6"],
       });
 
+      // Calculate points: 10 base + 5 per streak milestone
+      const streakBonus = Math.floor((habit.streak + 1) / 5) * 5;
+      const points = 10 + streakBonus;
+      setPointsEarned(points);
+      setShowPoints(true);
+      setStreakAnimation(true);
+
       setTimeout(() => setIsAnimating(false), 600);
+      setTimeout(() => setShowPoints(false), 1500);
+      setTimeout(() => setStreakAnimation(false), 800);
     }
+    
     onToggle(habit.id);
   };
 
@@ -48,6 +62,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
     productivity: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     spiritual: "bg-purple-500/20 text-purple-400 border-purple-500/30",
     financial: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    selfcare: "bg-pink-500/20 text-pink-400 border-pink-500/30",
   };
 
   const categoryNames: Record<string, string> = {
@@ -55,6 +70,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
     productivity: "Produtividade",
     spiritual: "Espiritual",
     financial: "Financeiro",
+    selfcare: "Autocuidado",
   };
 
   return (
@@ -67,6 +83,17 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
         isAnimating && "animate-pulse"
       )}
     >
+      {/* Floating Points Animation */}
+      {showPoints && (
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <span className="text-lg font-bold text-accent animate-fade-in" style={{
+            animation: "float-up 1.5s ease-out forwards"
+          }}>
+            +{pointsEarned} pts
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
         {/* Checkbox */}
         <button
@@ -93,28 +120,41 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
             <span className="text-xl">{habit.emoji}</span>
             <h3
               className={cn(
-                "font-medium truncate transition-all",
+                "font-medium truncate transition-all duration-300",
                 habit.completed && "line-through text-muted-foreground"
               )}
             >
               {habit.name}
             </h3>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span
               className={cn(
-                "px-2 py-0.5 rounded-full text-xs font-medium border",
+                "px-2 py-0.5 rounded-full text-xs font-medium border transition-all duration-300",
                 categoryColors[habit.category]
               )}
             >
               {categoryNames[habit.category]}
             </span>
+            
+            {/* Streak Display */}
             {habit.streak > 0 && (
-              <div className="flex items-center gap-1 text-accent">
-                <Flame className="w-3 h-3" />
-                <span className="text-xs font-medium">{habit.streak}</span>
+              <div className={cn(
+                "flex items-center gap-1 transition-all duration-300",
+                streakAnimation && "scale-125",
+                habit.streak >= 7 ? "text-orange-400" : "text-accent"
+              )}>
+                <Flame className={cn(
+                  "w-4 h-4",
+                  habit.streak >= 7 && "animate-pulse"
+                )} />
+                <span className="text-sm font-bold">{habit.streak}</span>
+                {habit.streak >= 7 && (
+                  <Trophy className="w-3 h-3 text-yellow-400 ml-0.5" />
+                )}
               </div>
             )}
+            
             {habit.reminderTime && (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="w-3 h-3" />
@@ -128,7 +168,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-lg hover:bg-glass-hover transition-colors opacity-0 group-hover:opacity-100"
+            className="p-2 rounded-lg hover:bg-glass-hover transition-all duration-300 opacity-0 group-hover:opacity-100"
           >
             <MoreVertical className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -145,7 +185,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
                     onStats(habit.id);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-all duration-300"
                 >
                   <BarChart3 className="w-4 h-4" />
                   Estatísticas
@@ -155,7 +195,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
                     onEdit(habit.id);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-all duration-300"
                 >
                   <Edit className="w-4 h-4" />
                   Editar
@@ -165,7 +205,7 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
                     onDelete(habit.id);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-colors text-red-400"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-all duration-300 text-red-400"
                 >
                   <Trash2 className="w-4 h-4" />
                   Deletar
@@ -175,6 +215,20 @@ const HabitCard = ({ habit, onToggle, onEdit, onDelete, onStats }: HabitCardProp
           )}
         </div>
       </div>
+
+      {/* CSS for floating animation */}
+      <style>{`
+        @keyframes float-up {
+          0% {
+            opacity: 1;
+            transform: translateY(0) translateX(-50%);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-40px) translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 };
