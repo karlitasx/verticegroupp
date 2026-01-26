@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Sprout, Leaf, TreeDeciduous, Flower2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import AnimatedPlant from "./AnimatedPlant";
+import confetti from "canvas-confetti";
 
 interface PlantStage {
   name: string;
-  icon: React.ReactNode;
   color: string;
   minProgress: number;
   description: string;
@@ -13,45 +14,67 @@ interface PlantStage {
 const plantStages: PlantStage[] = [
   { 
     name: "Semente", 
-    icon: <div className="w-8 h-8 rounded-full bg-amber-800/50 flex items-center justify-center">🌰</div>,
     color: "from-amber-600 to-amber-800",
     minProgress: 0,
     description: "Sua jornada está começando!"
   },
   { 
     name: "Broto", 
-    icon: <Sprout className="w-12 h-12" />,
     color: "from-lime-400 to-green-500",
     minProgress: 20,
     description: "Você está crescendo!"
   },
   { 
     name: "Planta Pequena", 
-    icon: <Leaf className="w-14 h-14" />,
     color: "from-green-400 to-emerald-600",
     minProgress: 40,
     description: "Continue assim!"
   },
   { 
     name: "Planta Média", 
-    icon: <TreeDeciduous className="w-16 h-16" />,
     color: "from-emerald-400 to-teal-600",
     minProgress: 60,
     description: "Você está florescendo!"
   },
   { 
     name: "Planta Florida", 
-    icon: <Flower2 className="w-20 h-20" />,
     color: "from-pink-400 via-purple-400 to-indigo-500",
     minProgress: 80,
     description: "Incrível! Sua planta está linda!"
   },
 ];
 
+// Progress calculation weights
+const WEIGHTS = {
+  habits: 0.30,      // 30% - hábitos completos
+  goals: 0.25,       // 25% - metas alcançadas
+  streak: 0.20,      // 20% - dias consecutivos
+  tasks: 0.15,       // 15% - tarefas feitas
+  selfCare: 0.10,    // 10% - autocuidado
+};
+
 const VirtualPlant = () => {
-  const [weeklyProgress] = useState(65); // This would come from real data
+  // These would come from real data/context
+  const [progressData] = useState({
+    habitsCompleted: 75,    // percentage of habits done today
+    goalsAchieved: 60,      // percentage of goals met
+    streakDays: 7,          // consecutive days (max 30 for 100%)
+    tasksCompleted: 80,     // percentage of tasks done
+    selfCareScore: 50,      // self-care check-in score
+  });
+
   const [showSparkle, setShowSparkle] = useState(false);
-  const [animatedProgress, setAnimatedProgress] = useState(0);
+  const [isEvolvingAnimation, setIsEvolvingAnimation] = useState(false);
+  const [previousStage, setPreviousStage] = useState(0);
+
+  // Calculate weighted progress
+  const weeklyProgress = Math.round(
+    progressData.habitsCompleted * WEIGHTS.habits +
+    progressData.goalsAchieved * WEIGHTS.goals +
+    Math.min(progressData.streakDays / 30, 1) * 100 * WEIGHTS.streak +
+    progressData.tasksCompleted * WEIGHTS.tasks +
+    progressData.selfCareScore * WEIGHTS.selfCare
+  );
 
   const getCurrentStage = (progress: number) => {
     for (let i = plantStages.length - 1; i >= 0; i--) {
@@ -70,13 +93,33 @@ const VirtualPlant = () => {
     ? Math.round(((weeklyProgress - currentStage.minProgress) / (nextStage.minProgress - currentStage.minProgress)) * 100)
     : 100;
 
+  // Check for stage evolution
+  useEffect(() => {
+    if (currentStageIndex > previousStage) {
+      setIsEvolvingAnimation(true);
+      setShowSparkle(true);
+      
+      // Trigger confetti for evolution
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#22c55e", "#10b981", "#34d399", "#a855f7", "#ec4899"],
+      });
+
+      setTimeout(() => {
+        setIsEvolvingAnimation(false);
+      }, 1000);
+    }
+    setPreviousStage(currentStageIndex);
+  }, [currentStageIndex, previousStage]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      setAnimatedProgress(weeklyProgress);
       setShowSparkle(true);
     }, 500);
     return () => clearTimeout(timer);
-  }, [weeklyProgress]);
+  }, []);
 
   useEffect(() => {
     if (showSparkle) {
@@ -89,7 +132,7 @@ const VirtualPlant = () => {
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600">
-          <Sprout className="w-5 h-5 text-white" />
+          <Sparkles className="w-5 h-5 text-white" />
         </div>
         <h3 className="font-semibold text-lg">Sua Plantinha</h3>
       </div>
@@ -97,13 +140,16 @@ const VirtualPlant = () => {
       {/* Plant Display */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="relative flex flex-col items-center py-6 cursor-pointer group">
+          <div className="relative flex flex-col items-center py-4 cursor-pointer group">
             {/* Glow effect */}
-            <div className={`absolute inset-0 bg-gradient-to-t ${currentStage.color} opacity-20 blur-2xl rounded-full`} />
+            <div className={`absolute inset-0 bg-gradient-to-t ${currentStage.color} opacity-20 blur-2xl rounded-full transition-all duration-500`} />
             
-            {/* Plant container */}
-            <div className={`relative z-10 p-6 rounded-full bg-gradient-to-t ${currentStage.color} text-white transform group-hover:scale-110 transition-transform duration-300`}>
-              {currentStage.icon}
+            {/* Animated Plant */}
+            <div className="relative z-10 w-32 h-40 transform group-hover:scale-105 transition-transform duration-300">
+              <AnimatedPlant 
+                stage={currentStageIndex} 
+                isAnimating={isEvolvingAnimation}
+              />
               
               {/* Sparkle animation */}
               {showSparkle && (
@@ -114,12 +160,19 @@ const VirtualPlant = () => {
             </div>
 
             {/* Stage name */}
-            <p className="mt-4 font-semibold text-lg">{currentStage.name}</p>
+            <p className="mt-2 font-semibold text-lg">{currentStage.name}</p>
             <p className="text-sm text-muted-foreground">{currentStage.description}</p>
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="bg-background/95 backdrop-blur-sm border-white/10">
-          <p className="font-medium">Sua planta cresceu {animatedProgress}% esta semana! 🌱</p>
+          <p className="font-medium">Sua planta cresceu {weeklyProgress}% esta semana! 🌱</p>
+          <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+            <p>• Hábitos: {progressData.habitsCompleted}%</p>
+            <p>• Metas: {progressData.goalsAchieved}%</p>
+            <p>• Streak: {progressData.streakDays} dias</p>
+            <p>• Tarefas: {progressData.tasksCompleted}%</p>
+            <p>• Autocuidado: {progressData.selfCareScore}%</p>
+          </div>
         </TooltipContent>
       </Tooltip>
 
@@ -142,17 +195,37 @@ const VirtualPlant = () => {
         </div>
       )}
 
+      {/* Weekly Progress Bar */}
+      <div className="mt-4 pt-4 border-t border-glass-border">
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>Progresso Semanal</span>
+          <span className="font-medium text-foreground">{weeklyProgress}%</span>
+        </div>
+        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out rounded-full"
+            style={{ width: `${weeklyProgress}%` }}
+          />
+        </div>
+      </div>
+
       {/* Stage indicators */}
       <div className="flex justify-center gap-2 mt-4">
         {plantStages.map((stage, index) => (
-          <div 
-            key={stage.name}
-            className={`w-2 h-2 rounded-full transition-all ${
-              index <= currentStageIndex 
-                ? `bg-gradient-to-r ${stage.color}` 
-                : "bg-white/20"
-            }`}
-          />
+          <Tooltip key={stage.name}>
+            <TooltipTrigger asChild>
+              <div 
+                className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer hover:scale-125 ${
+                  index <= currentStageIndex 
+                    ? `bg-gradient-to-r ${stage.color}` 
+                    : "bg-white/20"
+                }`}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {stage.name} ({stage.minProgress}%+)
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
     </div>

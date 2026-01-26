@@ -1,4 +1,4 @@
-import { Home, Target, DollarSign, Star, User } from "lucide-react";
+import { Home, Target, DollarSign, Star, User, Trophy, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -12,6 +12,8 @@ const navItems: NavItem[] = [
   { icon: Target, label: "Hábitos", href: "/habits" },
   { icon: DollarSign, label: "Finanças", href: "/finances" },
   { icon: Star, label: "Wishlist", href: "/wishlist" },
+  { icon: Heart, label: "Autocuidado", href: "/selfcare" },
+  { icon: Trophy, label: "Comunidade", href: "/community" },
   { icon: User, label: "Perfil", href: "/profile" },
 ];
 

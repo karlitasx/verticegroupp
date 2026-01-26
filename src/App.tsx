@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Habits from "./pages/Habits";
 import Finances from "./pages/Finances";
 import Wishlist from "./pages/Wishlist";
+import Community from "./pages/Community";
+import SelfCare from "./pages/SelfCare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/habits" element={<Habits />} />
           <Route path="/finances" element={<Finances />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/selfcare" element={<SelfCare />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
