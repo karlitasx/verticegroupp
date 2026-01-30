@@ -14,6 +14,7 @@ import Finances from "./pages/Finances";
 import Community from "./pages/Community";
 import SelfCare from "./pages/SelfCare";
 import Achievements from "./pages/Achievements";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,11 @@ const App = () => (
               <Route path="/achievements" element={
                 <ProtectedRoute>
                   <Achievements />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               } />
               
