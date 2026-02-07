@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Trophy, Flame, Target, Calendar, Lock, User } from "lucide-react";
+import { ArrowLeft, Trophy, Flame, Target, Calendar, Lock, User, Users } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BadgeDisplay } from "@/components/achievements/BadgeDisplay";
+import { FollowButton } from "@/components/social/FollowButton";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { LEVEL_EMOJIS, LEVEL_COLORS, UserLevel, RARITY_COLORS, RARITY_LABELS } from "@/types/achievements";
@@ -98,12 +99,12 @@ const PublicProfile = () => {
 
             {/* Profile info */}
             <div className="pt-14 pl-2">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">
                     {profile.display_name || "Usuário"}
                   </h1>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <Badge variant="secondary" className="gap-1">
                       {LEVEL_EMOJIS[level]} {level}
                     </Badge>
@@ -111,14 +112,36 @@ const PublicProfile = () => {
                       Membro há {memberSince}
                     </span>
                   </div>
+                  
+                  {/* Follower stats */}
+                  <div className="flex items-center gap-4 mt-3 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">
+                        {profile.followers_count || 0}
+                      </span>
+                      <span className="text-muted-foreground">seguidores</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        {profile.following_count || 0}
+                      </span>
+                      <span className="text-muted-foreground ml-1">seguindo</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Top badges */}
-                {profile.show_achievements && achievements.length > 0 && (
-                  <div className="hidden sm:block">
-                    <BadgeDisplay achievements={achievements.slice(0, 5)} size="md" />
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  {/* Follow button */}
+                  {userId && <FollowButton targetUserId={userId} />}
+                  
+                  {/* Top badges */}
+                  {profile.show_achievements && achievements.length > 0 && (
+                    <div className="hidden sm:block">
+                      <BadgeDisplay achievements={achievements.slice(0, 5)} size="md" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Level progress */}

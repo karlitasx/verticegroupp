@@ -8,6 +8,8 @@ export interface PublicProfile {
   avatar_url: string | null;
   show_achievements: boolean;
   created_at: string;
+  followers_count: number;
+  following_count: number;
 }
 
 export interface PublicUserStats {
@@ -60,7 +62,7 @@ export const usePublicProfile = (userId: string | undefined) => {
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url, show_achievements, created_at")
+        .select("user_id, display_name, avatar_url, show_achievements, created_at, followers_count, following_count")
         .eq("user_id", userId)
         .maybeSingle();
 

@@ -4,18 +4,44 @@ import { useAuth } from "@/hooks/useAuth";
 import { Post, CreatePostInput } from "@/types/posts";
 import { toast } from "sonner";
 
-export const useSupabasePosts = () => {
+export const useSupabasePosts = (filterByFollowing: boolean = false) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
 
   const fetchPosts = useCallback(async () => {
     try {
-      // Fetch all posts
-      const { data: postsData, error: postsError } = await supabase
+      // If filtering by following, first get who user follows
+      let followingUserIds: string[] = [];
+      if (filterByFollowing && user) {
+        const { data: followsData } = await supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", user.id);
+        
+        followingUserIds = followsData?.map(f => f.following_id) || [];
+        setFollowingIds(followingUserIds);
+        
+        // Include own posts in "following" feed
+        followingUserIds.push(user.id);
+      }
+
+      // Fetch posts
+      let query = supabase
         .from("posts")
         .select("*")
         .order("created_at", { ascending: false });
+
+      // Apply filter if needed
+      if (filterByFollowing && followingUserIds.length > 0) {
+        query = query.in("user_id", followingUserIds);
+      } else if (filterByFollowing) {
+        // User follows nobody, only show own posts
+        query = query.eq("user_id", user?.id || "");
+      }
+
+      const { data: postsData, error: postsError } = await query;
 
       if (postsError) throw postsError;
 
@@ -57,7 +83,7 @@ export const useSupabasePosts = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, filterByFollowing]);
 
   useEffect(() => {
     fetchPosts();
@@ -161,6 +187,7 @@ export const useSupabasePosts = () => {
   return {
     posts,
     loading,
+    followingIds,
     createPost,
     deletePost,
     toggleLike,
