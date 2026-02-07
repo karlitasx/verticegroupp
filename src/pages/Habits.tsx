@@ -4,11 +4,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import HabitCard from "@/components/habits/HabitCard";
 import AddHabitModal, { NewHabit } from "@/components/habits/AddHabitModal";
 import HabitStats from "@/components/habits/HabitStats";
-import { useHabits, HabitData } from "@/hooks/useHabits";
+import { useSupabaseHabits, HabitData } from "@/hooks/useSupabaseHabits";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type FilterType = "all" | "completed" | "pending" | string;
 
@@ -27,7 +28,7 @@ const categoryFilters = [
 ];
 
 const Habits = () => {
-  const { habits, isLoaded, toggleHabit, addHabit, deleteHabit, getStats } = useHabits();
+  const { habits, isLoaded, toggleHabit, addHabit, deleteHabit, getStats } = useSupabaseHabits();
   const { incrementStat, incrementCategoryCompletion, updateStats } = useAchievementsContext();
   const [filter, setFilter] = useState<FilterType>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -48,37 +49,37 @@ const Habits = () => {
 
   const handleToggle = (id: string) => {
     const habit = habits.find(h => h.id === id);
-    const result = toggleHabit(id);
     
-    if (result.streakIncreased && habit) {
-      // Update achievements stats
-      incrementStat('habitsCompleted');
-      incrementCategoryCompletion(habit.category);
-      
-      // Update longest streak
-      if (result.newStreak > stats.longestStreak) {
-        updateStats({ longestStreak: result.newStreak });
+    // Call async function but return synchronously for HabitCard compatibility
+    toggleHabit(id).then((result) => {
+      if (result.streakIncreased && habit) {
+        incrementStat('habitsCompleted');
+        incrementCategoryCompletion(habit.category);
+        
+        if (result.newStreak > stats.longestStreak) {
+          updateStats({ longestStreak: result.newStreak });
+        }
+        
+        const completedAfterToggle = habits.filter(h => h.id === id ? true : h.completed).length;
+        if (completedAfterToggle === habits.length) {
+          incrementStat('perfectDays');
+        }
+        
+        if (result.newStreak % 7 === 0 && result.newStreak > 0) {
+          toast({
+            title: `🔥 Streak de ${result.newStreak} dias!`,
+            description: `Parabéns! Você ganhou +100 pontos bônus!`,
+          });
+        }
       }
-      
-      // Check for perfect day
-      const completedAfterToggle = habits.filter(h => h.id === id ? true : h.completed).length;
-      if (completedAfterToggle === habits.length) {
-        incrementStat('perfectDays');
-      }
-      
-      if (result.newStreak % 7 === 0 && result.newStreak > 0) {
-        toast({
-          title: `🔥 Streak de ${result.newStreak} dias!`,
-          description: `Parabéns! Você ganhou +100 pontos bônus!`,
-        });
-      }
-    }
+    });
     
-    return result;
+    // Return default for immediate UI update
+    return { newStreak: 0, streakIncreased: false };
   };
 
-  const handleAdd = (newHabit: NewHabit) => {
-    addHabit({
+  const handleAdd = async (newHabit: NewHabit) => {
+    await addHabit({
       name: newHabit.name,
       emoji: newHabit.emoji,
       category: newHabit.category,
@@ -86,7 +87,6 @@ const Habits = () => {
       reminderTime: newHabit.reminderTime,
     });
 
-    // Update achievements stats
     incrementStat('habitsCreated');
 
     toast({
@@ -95,9 +95,9 @@ const Habits = () => {
     });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const habit = habits.find(h => h.id === id);
-    deleteHabit(id);
+    await deleteHabit(id);
     
     toast({
       title: "Hábito removido",
@@ -110,7 +110,6 @@ const Habits = () => {
     setShowStats(true);
   };
 
-  // Convert HabitData to Habit format for HabitCard
   const convertToHabitCardFormat = (habit: HabitData) => ({
     id: habit.id,
     name: habit.name,
@@ -123,7 +122,6 @@ const Habits = () => {
     completed: habit.completed,
   });
 
-  // Loading state
   if (!isLoaded) {
     return (
       <DashboardLayout activeNav="/habits">
@@ -157,8 +155,8 @@ const Habits = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl logo-gradient">
-              <Target className="w-6 h-6 text-white" />
+            <div className="p-3 rounded-xl bg-primary/20">
+              <Target className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">Meus Hábitos</h1>
@@ -178,96 +176,98 @@ const Habits = () => {
         </div>
 
         {/* Progress Bar */}
-        <div className="glass-card p-4 mb-6 animate-slide-up">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Progresso do dia</span>
-            <span className="font-semibold">{stats.progressPercent}%</span>
+        {habits.length > 0 && (
+          <div className="glass-card p-4 mb-6 animate-slide-up">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Progresso do dia</span>
+              <span className="font-semibold">{stats.progressPercent}%</span>
+            </div>
+            <div className="h-3 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                style={{ width: `${stats.progressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="h-3 rounded-full bg-glass overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-              style={{ width: `${stats.progressPercent}%` }}
-            />
-          </div>
-        </div>
+        )}
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 mb-6 animate-slide-up animation-delay-100">
-          {filters.map((f) => (
+        {/* Filters - only show if there are habits */}
+        {habits.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 animate-slide-up animation-delay-100">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
+                  filter === f.id
+                    ? "btn-gradient"
+                    : "bg-muted/50 hover:bg-muted text-muted-foreground hover:scale-105"
+                )}
+              >
+                {f.name}
+              </button>
+            ))}
+
+            <div className="relative">
+              <button
+                onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
+                  ["health", "productivity", "spiritual", "financial", "selfcare"].includes(filter)
+                    ? "btn-gradient"
+                    : "bg-muted/50 hover:bg-muted text-muted-foreground hover:scale-105"
+                )}
+              >
+                <Filter className="w-4 h-4" />
+                Categoria
+              </button>
+
+              {showCategoryFilter && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowCategoryFilter(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-48 glass-card py-2 z-20 animate-scale-in">
+                    {categoryFilters.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          setFilter(cat.id);
+                          setShowCategoryFilter(false);
+                        }}
+                        className={cn(
+                          "w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-muted transition-all duration-300",
+                          filter === cat.id && "text-primary"
+                        )}
+                      >
+                        <span>{cat.emoji}</span>
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => setShowStats(!showStats)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
-                filter === f.id
+                "ml-auto px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
+                showStats
                   ? "btn-gradient"
-                  : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
+                  : "bg-muted/50 hover:bg-muted text-muted-foreground hover:scale-105"
               )}
             >
-              {f.name}
+              <BarChart3 className="w-4 h-4" />
+              Estatísticas
             </button>
-          ))}
-
-          {/* Category Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
-                ["health", "productivity", "spiritual", "financial", "selfcare"].includes(filter)
-                  ? "btn-gradient"
-                  : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
-              )}
-            >
-              <Filter className="w-4 h-4" />
-              Categoria
-            </button>
-
-            {showCategoryFilter && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowCategoryFilter(false)}
-                />
-                <div className="absolute left-0 top-full mt-2 w-48 glass-card py-2 z-20 animate-scale-in">
-                  {categoryFilters.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setFilter(cat.id);
-                        setShowCategoryFilter(false);
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-glass-hover transition-all duration-300",
-                        filter === cat.id && "text-primary"
-                      )}
-                    >
-                      <span>{cat.emoji}</span>
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
-
-          {/* Stats Toggle */}
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className={cn(
-              "ml-auto px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2",
-              showStats
-                ? "btn-gradient"
-                : "bg-glass hover:bg-glass-hover text-muted-foreground hover:scale-105"
-            )}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Estatísticas
-          </button>
-        </div>
+        )}
 
         {/* Stats Section */}
-        {showStats && (
+        {showStats && habits.length > 0 && (
           <div className="mb-6 animate-scale-in">
             <HabitStats habitId={selectedHabitId || "all"} />
           </div>
@@ -275,24 +275,23 @@ const Habits = () => {
 
         {/* Habits List */}
         <div className="space-y-3">
-          {filteredHabits.length === 0 ? (
+          {habits.length === 0 ? (
+            <EmptyState
+              icon={Target}
+              title="Nenhum hábito ainda"
+              description="Crie seu primeiro hábito e comece a construir uma rotina saudável!"
+              action={{
+                label: "Criar Primeiro Hábito",
+                onClick: () => setShowAddModal(true),
+              }}
+            />
+          ) : filteredHabits.length === 0 ? (
             <div className="glass-card p-8 text-center animate-fade-in">
               <Target className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="font-semibold mb-2">Nenhum hábito encontrado</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {filter === "all"
-                  ? "Comece adicionando seu primeiro hábito!"
-                  : "Tente mudar os filtros"}
+              <p className="text-sm text-muted-foreground">
+                Tente mudar os filtros
               </p>
-              {filter === "all" && (
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="btn-gradient px-5 py-2 rounded-xl inline-flex items-center gap-2 hover:scale-105 transition-all duration-300"
-                >
-                  <Plus className="w-4 h-4" />
-                  Adicionar Hábito
-                </button>
-              )}
             </div>
           ) : (
             filteredHabits.map((habit, index) => (
@@ -314,7 +313,6 @@ const Habits = () => {
         </div>
       </div>
 
-      {/* Add Modal */}
       <AddHabitModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

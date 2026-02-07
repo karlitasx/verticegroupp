@@ -1,4 +1,7 @@
-import { Target, Wallet, ListTodo, Trophy, TrendingUp, TrendingDown, Flame } from "lucide-react";
+import { Target, Wallet, Flame, Trophy, TrendingUp, TrendingDown } from "lucide-react";
+import { useSupabaseHabits } from "@/hooks/useSupabaseHabits";
+import { useSupabaseFinances } from "@/hooks/useSupabaseFinances";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -13,7 +16,7 @@ interface StatCardProps {
 const StatCard = ({ icon, label, value, subValue, trend, trendValue, gradient }: StatCardProps) => (
   <div className="glass-card p-4 hover:scale-105 transition-all duration-300 cursor-pointer group active:scale-95">
     <div className="flex items-start justify-between mb-3">
-      <div className={`p-2 rounded-lg bg-gradient-to-br ${gradient} group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
+      <div className={`p-2 rounded-lg ${gradient} group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
         {icon}
       </div>
       {trend && (
@@ -37,48 +40,62 @@ const StatCard = ({ icon, label, value, subValue, trend, trendValue, gradient }:
 );
 
 const QuickStats = () => {
-  const stats = {
-    habits: { completed: 5, total: 7, streak: 12 },
-    finances: { balance: 12450.00, variation: 350.00 },
-    tasks: { pending: 4 },
-    ranking: { position: 15 },
-  };
+  const { habits, isLoaded: habitsLoaded, getStats } = useSupabaseHabits();
+  const { stats: financeStats, isLoaded: financesLoaded } = useSupabaseFinances();
+
+  const habitStats = getStats();
+  const isLoading = !habitsLoaded || !financesLoaded;
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} className="h-32 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  // Calculate longest streak from habits
+  const longestStreak = habits.length > 0 
+    ? Math.max(...habits.map(h => h.streak), 0)
+    : 0;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
       <StatCard
         icon={<Target className="w-5 h-5 text-white" />}
         label="Hábitos hoje"
-        value={`${stats.habits.completed}/${stats.habits.total}`}
-        subValue={`${stats.habits.streak} dias de streak`}
-        gradient="from-purple-500 to-indigo-600"
+        value={habits.length > 0 ? `${habitStats.completedToday}/${habitStats.totalHabits}` : "0/0"}
+        subValue={longestStreak > 0 ? `${longestStreak} dias de streak` : undefined}
+        gradient="bg-primary/80"
       />
       
       <StatCard
         icon={<Wallet className="w-5 h-5 text-white" />}
         label="Saldo atual"
-        value={`R$ ${stats.finances.balance.toLocaleString("pt-BR")}`}
-        trend={stats.finances.variation >= 0 ? "up" : "down"}
-        trendValue={`${stats.finances.variation >= 0 ? "+" : ""}R$ ${stats.finances.variation.toLocaleString("pt-BR")}`}
-        gradient="from-emerald-500 to-teal-600"
+        value={`R$ ${financeStats.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+        trend={financeStats.balance >= 0 ? "up" : "down"}
+        trendValue={financeStats.balance >= 0 ? "positivo" : "negativo"}
+        gradient="bg-emerald-600/80"
       />
       
       <StatCard
-        icon={<ListTodo className="w-5 h-5 text-white" />}
-        label="Tarefas pendentes"
-        value={stats.tasks.pending}
+        icon={<Flame className="w-5 h-5 text-white" />}
+        label="Maior streak"
+        value={`${habitStats.longestStreak} dias`}
         trend="neutral"
-        trendValue="para hoje"
-        gradient="from-orange-500 to-amber-600"
+        trendValue="recorde"
+        gradient="bg-orange-500/80"
       />
       
       <StatCard
         icon={<Trophy className="w-5 h-5 text-white" />}
-        label="Seu ranking"
-        value={`#${stats.ranking.position}`}
-        trend="up"
-        trendValue="+3 posições"
-        gradient="from-yellow-500 to-orange-500"
+        label="Taxa de economia"
+        value={financeStats.income > 0 ? `${financeStats.savingsRate.toFixed(0)}%` : "—"}
+        trend={financeStats.savingsRate > 0 ? "up" : "neutral"}
+        trendValue={financeStats.savingsRate > 20 ? "ótimo!" : "do mês"}
+        gradient="bg-yellow-500/80"
       />
     </div>
   );

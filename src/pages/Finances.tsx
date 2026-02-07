@@ -1,147 +1,31 @@
-import { useState, useEffect } from "react";
-import { Plus, DollarSign, Star } from "lucide-react";
+import { useState } from "react";
+import { Plus, DollarSign, Star, Wallet } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SummaryCards from "@/components/finances/SummaryCards";
 import FinanceBarChart from "@/components/finances/FinanceBarChart";
 import CategoryDonut from "@/components/finances/CategoryDonut";
-import TransactionsList, { Transaction } from "@/components/finances/TransactionsList";
+import TransactionsList from "@/components/finances/TransactionsList";
 import AddTransactionModal from "@/components/finances/AddTransactionModal";
 import FinanceFilters from "@/components/finances/FinanceFilters";
 import SavingsGoal from "@/components/finances/SavingsGoal";
 import WishlistTab from "@/components/finances/WishlistTab";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { useAchievementsContext } from "@/contexts/AchievementsContext";
-
-const TRANSACTIONS_KEY = "vidaflow_transactions";
-
-// Mock initial data
-const initialTransactions: Transaction[] = [
-  {
-    id: "1",
-    description: "Salário",
-    category: "Salário",
-    amount: 8500,
-    type: "income",
-    date: new Date(2025, 0, 5),
-  },
-  {
-    id: "2",
-    description: "Aluguel",
-    category: "Moradia",
-    amount: 1800,
-    type: "expense",
-    date: new Date(2025, 0, 10),
-  },
-  {
-    id: "3",
-    description: "Supermercado",
-    category: "Alimentação",
-    amount: 650,
-    type: "expense",
-    date: new Date(2025, 0, 12),
-  },
-  {
-    id: "4",
-    description: "Uber",
-    category: "Transporte",
-    amount: 85,
-    type: "expense",
-    date: new Date(2025, 0, 15),
-  },
-  {
-    id: "5",
-    description: "Cinema",
-    category: "Lazer",
-    amount: 120,
-    type: "expense",
-    date: new Date(2025, 0, 18),
-  },
-  {
-    id: "6",
-    description: "Farmácia",
-    category: "Saúde",
-    amount: 95,
-    type: "expense",
-    date: new Date(2025, 0, 20),
-  },
-  {
-    id: "7",
-    description: "Curso online",
-    category: "Educação",
-    amount: 197,
-    type: "expense",
-    date: new Date(2025, 0, 22),
-  },
-  {
-    id: "8",
-    description: "Freelance",
-    category: "Salário",
-    amount: 1500,
-    type: "income",
-    date: new Date(2025, 0, 23),
-  },
-];
-
-const categoryData = [
-  { name: "Alimentação", value: 850, color: "#f97316" },
-  { name: "Transporte", value: 320, color: "#3b82f6" },
-  { name: "Moradia", value: 1800, color: "#8b5cf6" },
-  { name: "Lazer", value: 420, color: "#ec4899" },
-  { name: "Saúde", value: 180, color: "#ef4444" },
-  { name: "Educação", value: 350, color: "#14b8a6" },
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useSupabaseFinances } from "@/hooks/useSupabaseFinances";
 
 const Finances = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { transactions, isLoaded, stats, addTransaction, deleteTransaction, filterTransactions, getCategoryData } = useSupabaseFinances();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [selectedType, setSelectedType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("overview");
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  const { incrementStat } = useAchievementsContext();
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(TRANSACTIONS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const withDates = parsed.map((t: Transaction & { date: string }) => ({
-          ...t,
-          date: new Date(t.date),
-        }));
-        setTransactions(withDates);
-      } else {
-        setTransactions(initialTransactions);
-      }
-    } catch (error) {
-      console.error("Error loading transactions:", error);
-      setTransactions(initialTransactions);
-    }
-    setIsLoaded(true);
-  }, []);
+  const categoryData = getCategoryData();
 
-  // Save to localStorage
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
-
-  // Calculate totals
-  const income = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const expenses = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const balance = 12450 + income - expenses;
-
-  const handleAddTransaction = (transaction: {
+  const handleAddTransaction = async (transaction: {
     description: string;
     category: string;
     amount: number;
@@ -149,18 +33,17 @@ const Finances = () => {
     date: Date;
     recurring: boolean;
   }) => {
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      ...transaction,
-    };
-    setTransactions([newTransaction, ...transactions]);
-    
-    // Update achievements
-    incrementStat('transactionsLogged');
+    await addTransaction({
+      description: transaction.description,
+      category: transaction.category,
+      amount: transaction.amount,
+      type: transaction.type,
+      date: transaction.date,
+    });
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+  const handleDeleteTransaction = async (id: string) => {
+    await deleteTransaction(id);
   };
 
   const handleClearFilters = () => {
@@ -169,35 +52,47 @@ const Finances = () => {
     setSelectedCategory(null);
   };
 
-  // Handle savings from wishlist
-  const handleSavingsTransaction = (amount: number, wishName: string) => {
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
+  const handleSavingsTransaction = async (amount: number, wishName: string) => {
+    await addTransaction({
       description: `Economia: ${wishName}`,
       category: "Investimento / Objetivo",
       amount,
-      type: "expense", // It's technically an expense (money going out to savings)
+      type: "expense",
       date: new Date(),
-    };
-    setTransactions([newTransaction, ...transactions]);
-    
-    // Update achievements
-    incrementStat('transactionsLogged');
+    });
   };
 
-  // Filter transactions by type
-  const filteredTransactions = transactions.filter((t) => {
-    if (selectedType === "all") return true;
-    return t.type === selectedType;
-  });
+  const filteredTransactions = filterTransactions(selectedType);
+
+  if (!isLoaded) {
+    return (
+      <DashboardLayout activeNav="/finances">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-6">
+            <Skeleton className="w-14 h-14 rounded-xl" />
+            <div>
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </div>
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout activeNav="/finances">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl logo-gradient">
-            <DollarSign className="w-6 h-6 text-white" />
+          <div className="p-3 rounded-xl bg-primary/20">
+            <DollarSign className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Finanças</h1>
@@ -208,7 +103,7 @@ const Finances = () => {
         {activeTab === "overview" && (
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="logo-gradient gap-2"
+            className="btn-gradient gap-2"
           >
             <Plus className="w-5 h-5" />
             Nova Transação
@@ -218,17 +113,17 @@ const Finances = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-glass">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-muted/50">
           <TabsTrigger 
             value="overview" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             <DollarSign className="w-4 h-4 mr-2" />
             Visão Geral
           </TabsTrigger>
           <TabsTrigger 
             value="wishlist"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             <Star className="w-4 h-4 mr-2" />
             Meus Objetivos
@@ -236,48 +131,65 @@ const Finances = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 animate-fade-in">
-          {/* Summary Cards */}
-          <SummaryCards balance={balance} income={income} expenses={expenses} />
+          {transactions.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title="Nenhuma transação ainda"
+              description="Registre sua primeira receita ou despesa para começar a acompanhar suas finanças."
+              action={{
+                label: "Adicionar Transação",
+                onClick: () => setIsModalOpen(true),
+              }}
+            />
+          ) : (
+            <>
+              {/* Summary Cards */}
+              <SummaryCards balance={stats.balance} income={stats.income} expenses={stats.expenses} />
 
-          {/* Filters */}
-          <FinanceFilters
-            selectedPeriod={selectedPeriod}
-            selectedType={selectedType}
-            onPeriodChange={setSelectedPeriod}
-            onTypeChange={setSelectedType}
-            onClearFilters={handleClearFilters}
-          />
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Left Column - Charts */}
-            <div className="xl:col-span-2 space-y-6">
-              <FinanceBarChart />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CategoryDonut
-                  data={categoryData}
-                  selectedCategory={selectedCategory}
-                  onCategoryClick={setSelectedCategory}
-                />
-                <SavingsGoal
-                  goal={10000}
-                  current={4300}
-                  monthlyExpenses={expenses}
-                  budgetLimit={4000}
-                />
-              </div>
-            </div>
-
-            {/* Right Column - Transactions */}
-            <div className="xl:col-span-1">
-              <TransactionsList
-                transactions={filteredTransactions}
-                onDelete={handleDeleteTransaction}
-                categoryFilter={selectedCategory}
+              {/* Filters */}
+              <FinanceFilters
+                selectedPeriod={selectedPeriod}
+                selectedType={selectedType}
+                onPeriodChange={setSelectedPeriod}
+                onTypeChange={setSelectedType}
+                onClearFilters={handleClearFilters}
               />
-            </div>
-          </div>
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Left Column - Charts */}
+                <div className="xl:col-span-2 space-y-6">
+                  <FinanceBarChart />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CategoryDonut
+                      data={categoryData}
+                      selectedCategory={selectedCategory}
+                      onCategoryClick={setSelectedCategory}
+                    />
+                    <SavingsGoal
+                      goal={10000}
+                      current={Math.max(0, stats.balance)}
+                      monthlyExpenses={stats.expenses}
+                      budgetLimit={4000}
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column - Transactions */}
+                <div className="xl:col-span-1">
+                  <TransactionsList
+                    transactions={filteredTransactions.map(t => ({
+                      ...t,
+                      date: t.date,
+                    }))}
+                    onDelete={handleDeleteTransaction}
+                    categoryFilter={selectedCategory}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="wishlist" className="animate-fade-in">
