@@ -8,6 +8,7 @@ import { AchievementsProvider } from "@/contexts/AchievementsContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/admin/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Habits from "./pages/Habits";
@@ -18,6 +19,7 @@ import SelfCare from "./pages/SelfCare";
 import Achievements from "./pages/Achievements";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +82,15 @@ const App = () => (
               <Route path="/user/:userId" element={
                 <ProtectedRoute>
                   <PublicProfile />
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin route - protected and admin-only */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminRoute>
+                    <Admin />
+                  </AdminRoute>
                 </ProtectedRoute>
               } />
               
