@@ -19,74 +19,9 @@ interface FinanceStats {
 }
 
 const TRANSACTIONS_KEY = "vidaflow_transactions";
-const BASE_BALANCE = 12450;
 
-const initialTransactions: Transaction[] = [
-  {
-    id: "1",
-    description: "Salário",
-    category: "Salário",
-    amount: 8500,
-    type: "income",
-    date: new Date(2025, 0, 5),
-  },
-  {
-    id: "2",
-    description: "Aluguel",
-    category: "Moradia",
-    amount: 1800,
-    type: "expense",
-    date: new Date(2025, 0, 10),
-  },
-  {
-    id: "3",
-    description: "Supermercado",
-    category: "Alimentação",
-    amount: 650,
-    type: "expense",
-    date: new Date(2025, 0, 12),
-  },
-  {
-    id: "4",
-    description: "Uber",
-    category: "Transporte",
-    amount: 85,
-    type: "expense",
-    date: new Date(2025, 0, 15),
-  },
-  {
-    id: "5",
-    description: "Cinema",
-    category: "Lazer",
-    amount: 120,
-    type: "expense",
-    date: new Date(2025, 0, 18),
-  },
-  {
-    id: "6",
-    description: "Farmácia",
-    category: "Saúde",
-    amount: 95,
-    type: "expense",
-    date: new Date(2025, 0, 20),
-  },
-  {
-    id: "7",
-    description: "Curso online",
-    category: "Educação",
-    amount: 197,
-    type: "expense",
-    date: new Date(2025, 0, 22),
-  },
-  {
-    id: "8",
-    description: "Freelance",
-    category: "Salário",
-    amount: 1500,
-    type: "income",
-    date: new Date(2025, 0, 23),
-  },
-];
+// No default transactions - users start with empty state
+const initialTransactions: Transaction[] = [];
 
 export const useFinances = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -128,7 +63,7 @@ export const useFinances = () => {
     const expenses = transactions
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
-    const balance = BASE_BALANCE + income - expenses;
+    const balance = income - expenses;
     const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
 
     return { income, expenses, balance, savingsRate };

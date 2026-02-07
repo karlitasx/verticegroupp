@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 const motivationalQuotes = [
   "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
@@ -28,6 +29,7 @@ const motivationalQuotes = [
 
 const HeroSection = () => {
   const { user } = useAuth();
+  const { profile, displayName, getInitials } = useProfile();
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Memoize quote to prevent re-renders
@@ -35,9 +37,6 @@ const HeroSection = () => {
     () => motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)],
     []
   );
-
-  // Load avatar from localStorage
-  const avatarUrl = useMemo(() => localStorage.getItem("vidaflow_avatar"), []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -71,63 +70,44 @@ const HeroSection = () => {
     });
   };
 
-  // Get user's name from metadata or extract from email
-  const userName = user?.user_metadata?.full_name 
-    || user?.email?.split("@")[0] 
-    || "Usuário";
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 mb-8 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 border border-white/10">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+    <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 mb-6 bg-card border border-border">
+      {/* Subtle background accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
       
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
         {/* Avatar */}
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-          <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-white/20 relative cursor-pointer hover:scale-105 transition-transform">
-            <AvatarImage src={avatarUrl || undefined} alt={userName} />
-            <AvatarFallback className="text-3xl md:text-4xl bg-gradient-to-br from-primary to-accent text-white">
-              {getInitials(userName)}
+        <div className="relative">
+          <Avatar className="w-20 h-20 md:w-24 md:h-24 border-2 border-border">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+            <AvatarFallback className="text-2xl md:text-3xl bg-primary text-primary-foreground">
+              {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-background flex items-center justify-center">
-            <span className="text-xs">✨</span>
-          </div>
         </div>
 
         {/* Greeting and Info */}
         <div className="flex-1 text-center md:text-left">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
-            {greeting}, <span className="text-gradient">{userName}</span>! {emoji}
+          <h1 className="text-2xl md:text-3xl font-semibold mb-1">
+            {greeting}, <span className="text-primary">{displayName}</span>! {emoji}
           </h1>
           
           {/* Date and Time */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4 text-muted-foreground">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-3 text-muted-foreground">
+            <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
               <span className="text-sm capitalize">{formatDate(currentTime)}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">{formatTime(currentTime)}</span>
+              <span className="text-sm">{formatTime(currentTime)}</span>
             </div>
           </div>
 
           {/* Motivational Quote */}
-          <div className="glass-card p-4 rounded-xl max-w-2xl">
-            <p className="text-sm md:text-base italic text-foreground/80">
-              ✨ "{quote}"
+          <div className="bg-muted/50 p-3 rounded-lg max-w-xl">
+            <p className="text-sm italic text-muted-foreground">
+              "{quote}"
             </p>
           </div>
         </div>

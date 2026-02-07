@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   User, 
   Camera, 
@@ -26,7 +27,8 @@ import {
   X,
   Star,
   TrendingUp,
-  Heart
+  Heart,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import XPProgressBar from "@/components/achievements/XPProgressBar";
@@ -45,26 +47,22 @@ interface UserPreferences {
   };
 }
 
-interface UserStats {
-  totalHabits: number;
-  habitsCompleted: number;
-  currentStreak: number;
-  longestStreak: number;
-  totalSaved: number;
-  wishesCompleted: number;
-  totalXP: number;
-  achievementsUnlocked: number;
-  totalAchievements: number;
-  memberSince: string;
-}
-
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { state, getAllAchievements, getUnlockedCount, getTotalCount } = useAchievementsContext();
+  const { 
+    profile, 
+    stats: dbStats, 
+    isLoading, 
+    isUploading, 
+    displayName, 
+    getInitials, 
+    updateProfile, 
+    uploadAvatar 
+  } = useProfile();
+  const { state, getUnlockedCount, getTotalCount } = useAchievementsContext();
   
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
     const saved = localStorage.getItem('vidaflow_preferences');
@@ -84,74 +82,42 @@ const Profile = () => {
 
   // Get level info from state
   const currentLevel = state.level;
-  const totalPoints = state.totalPoints;
+  const totalPoints = dbStats?.total_points || state.totalPoints;
   const levelProgress = state.levelProgress;
 
-  const [profileStats, setProfileStats] = useState<UserStats>(() => {
-    // Load stats from various localStorage sources
-    const habits = JSON.parse(localStorage.getItem('habits') || '[]');
-    const transactions = JSON.parse(localStorage.getItem('vidaflow_transactions') || '[]');
-    const wishes = JSON.parse(localStorage.getItem('vidaflow_wishes') || '[]');
-    
-    const completedHabits = habits.filter((h: any) => h.completedToday).length;
-    const completedWishes = wishes.filter((w: any) => w.completed).length;
-    const totalSaved = transactions
-      .filter((t: any) => t.type === 'income')
-      .reduce((sum: number, t: any) => sum + t.amount, 0);
+  // Computed stats
+  const achievementsUnlocked = getUnlockedCount();
+  const totalAchievements = getTotalCount();
+  const currentStreak = dbStats?.current_streak || 0;
+  const longestStreak = dbStats?.longest_streak || 0;
+  const habitsCompleted = dbStats?.habits_completed || 0;
+  const memberSince = user?.created_at 
+    ? new Date(user.created_at).toLocaleDateString('pt-BR') 
+    : 'Recentemente';
 
-    return {
-      totalHabits: habits.length,
-      habitsCompleted: completedHabits,
-      currentStreak: parseInt(localStorage.getItem('vidaflow_streak') || '0'),
-      longestStreak: parseInt(localStorage.getItem('vidaflow_longest_streak') || '0'),
-      totalSaved,
-      wishesCompleted: completedWishes,
-      totalXP: state.totalPoints,
-      achievementsUnlocked: getUnlockedCount(),
-      totalAchievements: getTotalCount(),
-      memberSince: user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'Recém chegada'
-    };
-  });
-
-  // Get user display name
-  const userName = user?.user_metadata?.full_name 
-    || user?.email?.split('@')[0] 
-    || "Usuário";
-
-  // Load avatar from localStorage
+  // Update edited name when profile loads
   useEffect(() => {
-    const savedAvatar = localStorage.getItem('vidaflow_avatar');
-    if (savedAvatar) {
-      setAvatarUrl(savedAvatar);
+    if (displayName) {
+      setEditedName(displayName);
     }
-    setEditedName(userName);
-  }, [userName]);
+  }, [displayName]);
 
   // Save preferences
   useEffect(() => {
     localStorage.setItem('vidaflow_preferences', JSON.stringify(preferences));
   }, [preferences]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        setAvatarUrl(dataUrl);
-        localStorage.setItem('vidaflow_avatar', dataUrl);
-        toast.success("Avatar atualizado com sucesso!");
-      };
-      reader.readAsDataURL(file);
+      await uploadAvatar(file);
     }
   };
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (editedName.trim()) {
-      // In a real app, this would update the user metadata
-      localStorage.setItem('vidaflow_display_name', editedName);
+      await updateProfile({ display_name: editedName.trim() });
       setIsEditingName(false);
-      toast.success("Nome atualizado com sucesso!");
     }
   };
 
@@ -171,98 +137,105 @@ const Profile = () => {
     toast.success("Preferência salva!");
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const StatCard = ({ icon: Icon, label, value, color, subValue }: { 
+  const StatCard = ({ icon: Icon, label, value, subValue }: { 
     icon: React.ElementType; 
     label: string; 
     value: string | number; 
-    color: string;
     subValue?: string;
   }) => (
-    <div className="glass-card p-4 hover:scale-105 transition-transform duration-300">
+    <div className="bg-card border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors">
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
-          <Icon className="w-5 h-5 text-white" />
+        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-primary" />
         </div>
-        <div>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xl font-semibold text-foreground truncate">{value}</p>
           <p className="text-xs text-muted-foreground">{label}</p>
-          {subValue && <p className="text-xs text-primary">{subValue}</p>}
+          {subValue && <p className="text-xs text-accent">{subValue}</p>}
         </div>
       </div>
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <DashboardLayout activeNav="/profile">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Skeleton className="h-48 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout activeNav="/profile">
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
         {/* Profile Header */}
-        <Card className="glass-card border-glass-border overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-primary via-secondary to-accent opacity-80" />
+        <Card className="bg-card border-border overflow-hidden">
+          <div className="h-20 bg-gradient-to-r from-primary/80 to-secondary/80" />
           <CardContent className="relative pt-0 pb-6">
             {/* Avatar */}
-            <div className="absolute -top-12 left-6">
+            <div className="absolute -top-10 left-6">
               <div className="relative group">
-                <Avatar className="w-24 h-24 border-4 border-background shadow-xl">
-                  <AvatarImage src={avatarUrl || undefined} alt={userName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
-                    {getInitials(userName)}
+                <Avatar className="w-20 h-20 border-4 border-card shadow-lg">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                    {getInitials(displayName)}
                   </AvatarFallback>
                 </Avatar>
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <Camera className="w-6 h-6 text-white" />
+                <label className="absolute inset-0 flex items-center justify-center bg-background/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 text-foreground animate-spin" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-foreground" />
+                  )}
                   <input 
                     type="file" 
                     accept="image/*" 
                     onChange={handleAvatarChange}
-                    className="hidden" 
+                    className="hidden"
+                    disabled={isUploading}
                   />
                 </label>
               </div>
             </div>
 
             {/* User Info */}
-            <div className="ml-32 pt-2">
+            <div className="ml-28 pt-2">
               <div className="flex items-center gap-2">
                 {isEditingName ? (
                   <div className="flex items-center gap-2">
                     <Input
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
-                      className="glass-input h-8 w-48"
+                      className="h-8 w-48 bg-muted border-border"
                       autoFocus
                     />
-                    <Button size="icon" variant="ghost" onClick={handleSaveName}>
-                      <Check className="w-4 h-4 text-green-500" />
+                    <Button size="icon" variant="ghost" onClick={handleSaveName} className="h-8 w-8">
+                      <Check className="w-4 h-4 text-success" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => setIsEditingName(false)}>
-                      <X className="w-4 h-4 text-red-500" />
+                    <Button size="icon" variant="ghost" onClick={() => setIsEditingName(false)} className="h-8 w-8">
+                      <X className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-2xl font-bold text-foreground">{userName}</h1>
-                    <Button size="icon" variant="ghost" onClick={() => setIsEditingName(true)}>
+                    <h1 className="text-xl font-semibold text-foreground">{displayName}</h1>
+                    <Button size="icon" variant="ghost" onClick={() => setIsEditingName(true)} className="h-8 w-8">
                       <Edit3 className="w-4 h-4 text-muted-foreground" />
                     </Button>
                   </>
                 )}
               </div>
               <p className="text-muted-foreground text-sm">{user?.email}</p>
-              <div className="flex items-center gap-4 mt-2">
-                <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
+              <div className="flex items-center gap-3 mt-2">
+                <span className="px-2.5 py-1 rounded-md bg-primary/15 text-primary text-sm font-medium">
                   {LEVEL_EMOJIS[currentLevel]} {currentLevel}
                 </span>
-                <span className="text-sm text-muted-foreground">
-                  Membro desde {profileStats.memberSince}
+                <span className="text-xs text-muted-foreground">
+                  Membro desde {memberSince}
                 </span>
               </div>
             </div>
@@ -270,7 +243,7 @@ const Profile = () => {
         </Card>
 
         {/* XP Progress */}
-        <Card className="glass-card border-glass-border">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <XPProgressBar 
               currentPoints={totalPoints} 
@@ -282,16 +255,16 @@ const Profile = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="stats" className="space-y-4">
-          <TabsList className="glass-card border-glass-border p-1 w-full">
-            <TabsTrigger value="stats" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsList className="bg-card border border-border p-1 w-full">
+            <TabsTrigger value="stats" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <TrendingUp className="w-4 h-4 mr-2" />
               Estatísticas
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <User className="w-4 h-4 mr-2" />
               Configurações
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="notifications" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Bell className="w-4 h-4 mr-2" />
               Notificações
             </TabsTrigger>
@@ -299,83 +272,66 @@ const Profile = () => {
 
           {/* Stats Tab */}
           <TabsContent value="stats" className="space-y-4 animate-fade-in">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard 
                 icon={Target} 
-                label="Hábitos ativos" 
-                value={profileStats.totalHabits}
-                color="bg-gradient-to-br from-blue-500 to-blue-600"
+                label="Hábitos completados" 
+                value={habitsCompleted}
               />
               <StatCard 
                 icon={Flame} 
                 label="Streak atual" 
-                value={`${profileStats.currentStreak} dias`}
-                color="bg-gradient-to-br from-orange-500 to-red-500"
-                subValue={`Recorde: ${profileStats.longestStreak} dias`}
+                value={`${currentStreak} dias`}
+                subValue={longestStreak > 0 ? `Recorde: ${longestStreak} dias` : undefined}
               />
               <StatCard 
                 icon={Trophy} 
                 label="Conquistas" 
-                value={`${profileStats.achievementsUnlocked}/${profileStats.totalAchievements}`}
-                color="bg-gradient-to-br from-yellow-500 to-amber-500"
+                value={`${achievementsUnlocked}/${totalAchievements}`}
               />
               <StatCard 
                 icon={Star} 
                 label="XP Total" 
                 value={totalPoints.toLocaleString()}
-                color="bg-gradient-to-br from-primary to-secondary"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="glass-card border-glass-border">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Target className="w-5 h-5 text-primary" />
-                    Hábitos
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary" />
+                    Progresso de Hábitos
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Completados hoje</span>
-                    <span className="font-medium">{profileStats.habitsCompleted}/{profileStats.totalHabits}</span>
+                    <span className="text-muted-foreground">Total completados</span>
+                    <span className="font-medium">{habitsCompleted}</span>
                   </div>
-                  <Progress value={(profileStats.habitsCompleted / Math.max(profileStats.totalHabits, 1)) * 100} className="h-2" />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Taxa de conclusão</span>
-                    <span className="text-primary font-medium">
-                      {profileStats.totalHabits > 0 
-                        ? Math.round((profileStats.habitsCompleted / profileStats.totalHabits) * 100) 
-                        : 0}%
-                    </span>
-                  </div>
+                  <Progress value={Math.min((habitsCompleted / 100) * 100, 100)} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    Continue completando hábitos para subir de nível!
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-glass-border">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-500" />
-                    Finanças
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-accent" />
+                    Conquistas
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total economizado</span>
-                    <span className="font-medium text-green-500">
-                      R$ {profileStats.totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
+                    <span className="text-muted-foreground">Desbloqueadas</span>
+                    <span className="font-medium">{achievementsUnlocked} de {totalAchievements}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Objetivos alcançados</span>
-                    <span className="font-medium">{profileStats.wishesCompleted}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Média de economia/mês</span>
-                    <span className="text-primary font-medium">
-                      R$ {(profileStats.totalSaved / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
+                  <Progress value={(achievementsUnlocked / totalAchievements) * 100} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    Complete ações para desbloquear conquistas!
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -383,26 +339,26 @@ const Profile = () => {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="animate-fade-in">
-            <Card className="glass-card border-glass-border">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">Preferências</CardTitle>
+                <CardTitle className="text-base">Preferências</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-5">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <Moon className="w-5 h-5 text-primary" />
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Moon className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">Tema</p>
-                        <p className="text-sm text-muted-foreground">Aparência do aplicativo</p>
+                        <p className="text-sm font-medium">Tema</p>
+                        <p className="text-xs text-muted-foreground">Aparência do app</p>
                       </div>
                     </div>
                     <select 
                       value={preferences.theme}
                       onChange={(e) => setPreferences(p => ({ ...p, theme: e.target.value as any }))}
-                      className="glass-input px-3 py-2 rounded-lg"
+                      className="bg-muted border border-border text-foreground px-3 py-1.5 rounded-md text-sm"
                     >
                       <option value="dark">Escuro</option>
                       <option value="light">Claro</option>
@@ -412,18 +368,22 @@ const Profile = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                        <Globe className="w-5 h-5 text-blue-500" />
+                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Globe className="w-4 h-4 text-accent" />
                       </div>
                       <div>
-                        <p className="font-medium">Idioma</p>
-                        <p className="text-sm text-muted-foreground">Idioma da interface</p>
+                        <p className="text-sm font-medium">Idioma</p>
+                        <p className="text-xs text-muted-foreground">Idioma da interface</p>
                       </div>
                     </div>
                     <select 
                       value={preferences.language}
-                      onChange={(e) => setPreferences(p => ({ ...p, language: e.target.value as any }))}
-                      className="glass-input px-3 py-2 rounded-lg"
+                      onChange={(e) => {
+                        const newLang = e.target.value as 'pt-BR' | 'en-US' | 'es';
+                        setPreferences(p => ({ ...p, language: newLang }));
+                        updateProfile({ language: newLang });
+                      }}
+                      className="bg-muted border border-border text-foreground px-3 py-1.5 rounded-md text-sm"
                     >
                       <option value="pt-BR">Português (BR)</option>
                       <option value="en-US">English (US)</option>
@@ -433,18 +393,22 @@ const Profile = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-green-500" />
+                      <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+                        <DollarSign className="w-4 h-4 text-success" />
                       </div>
                       <div>
-                        <p className="font-medium">Moeda</p>
-                        <p className="text-sm text-muted-foreground">Moeda para exibição</p>
+                        <p className="text-sm font-medium">Moeda</p>
+                        <p className="text-xs text-muted-foreground">Moeda para exibição</p>
                       </div>
                     </div>
                     <select 
                       value={preferences.currency}
-                      onChange={(e) => setPreferences(p => ({ ...p, currency: e.target.value as any }))}
-                      className="glass-input px-3 py-2 rounded-lg"
+                      onChange={(e) => {
+                        const newCurrency = e.target.value as 'BRL' | 'USD' | 'EUR';
+                        setPreferences(p => ({ ...p, currency: newCurrency }));
+                        updateProfile({ currency: newCurrency });
+                      }}
+                      className="bg-muted border border-border text-foreground px-3 py-1.5 rounded-md text-sm"
                     >
                       <option value="BRL">R$ (BRL)</option>
                       <option value="USD">$ (USD)</option>
@@ -453,7 +417,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-glass-border">
+                <div className="pt-4 border-t border-border">
                   <Button 
                     variant="destructive" 
                     className="w-full"
@@ -469,20 +433,20 @@ const Profile = () => {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="animate-fade-in">
-            <Card className="glass-card border-glass-border">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-primary" />
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-primary" />
                   Notificações
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <Target className="w-5 h-5 text-blue-500" />
+                    <Target className="w-4 h-4 text-accent" />
                     <div>
-                      <p className="font-medium">Lembretes de Hábitos</p>
-                      <p className="text-sm text-muted-foreground">Receber lembretes para completar hábitos</p>
+                      <p className="text-sm font-medium">Lembretes de Hábitos</p>
+                      <p className="text-xs text-muted-foreground">Receber lembretes</p>
                     </div>
                   </div>
                   <Switch
@@ -493,10 +457,10 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <DollarSign className="w-5 h-5 text-green-500" />
+                    <DollarSign className="w-4 h-4 text-success" />
                     <div>
-                      <p className="font-medium">Alertas Financeiros</p>
-                      <p className="text-sm text-muted-foreground">Notificações sobre gastos e metas</p>
+                      <p className="text-sm font-medium">Alertas Financeiros</p>
+                      <p className="text-xs text-muted-foreground">Gastos e metas</p>
                     </div>
                   </div>
                   <Switch
@@ -507,10 +471,10 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    <Trophy className="w-4 h-4 text-warning" />
                     <div>
-                      <p className="font-medium">Conquistas</p>
-                      <p className="text-sm text-muted-foreground">Alertas de novas conquistas desbloqueadas</p>
+                      <p className="text-sm font-medium">Conquistas</p>
+                      <p className="text-xs text-muted-foreground">Novas conquistas</p>
                     </div>
                   </div>
                   <Switch
@@ -521,10 +485,10 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <Flame className="w-5 h-5 text-orange-500" />
+                    <Flame className="w-4 h-4 text-destructive" />
                     <div>
-                      <p className="font-medium">Streaks em Risco</p>
-                      <p className="text-sm text-muted-foreground">Aviso quando seu streak está prestes a zerar</p>
+                      <p className="text-sm font-medium">Streaks em Risco</p>
+                      <p className="text-xs text-muted-foreground">Aviso de streak</p>
                     </div>
                   </div>
                   <Switch
@@ -535,10 +499,10 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <Heart className="w-5 h-5 text-pink-500" />
+                    <Heart className="w-4 h-4 text-primary" />
                     <div>
-                      <p className="font-medium">Comunidade</p>
-                      <p className="text-sm text-muted-foreground">Atualizações de grupos e desafios</p>
+                      <p className="text-sm font-medium">Comunidade</p>
+                      <p className="text-xs text-muted-foreground">Grupos e desafios</p>
                     </div>
                   </div>
                   <Switch
