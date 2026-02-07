@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AchievementsProvider } from "@/contexts/AchievementsContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -24,11 +25,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <AchievementsProvider>
-        <NotificationsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+      <ThemeProvider>
+        <AchievementsProvider>
+          <NotificationsProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
             <BrowserRouter>
               <Routes>
               {/* Auth route - only for unauthenticated users */}
@@ -85,9 +87,10 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
-      </NotificationsProvider>
-    </AchievementsProvider>
+          </TooltipProvider>
+        </NotificationsProvider>
+      </AchievementsProvider>
+    </ThemeProvider>
   </AuthProvider>
 </QueryClientProvider>
 );
