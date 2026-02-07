@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import HabitCard from "@/components/habits/HabitCard";
 import AddHabitModal, { NewHabit } from "@/components/habits/AddHabitModal";
 import HabitStats from "@/components/habits/HabitStats";
+import UpcomingEventsSection from "@/components/habits/UpcomingEventsSection";
 import { useSupabaseHabits, HabitData } from "@/hooks/useSupabaseHabits";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { cn } from "@/lib/utils";
@@ -173,6 +174,11 @@ const Habits = () => {
             <Plus className="w-5 h-5" />
             <span className="font-medium">Novo Hábito</span>
           </button>
+        </div>
+
+        {/* Upcoming Events Section */}
+        <div className="mb-6">
+          <UpcomingEventsSection />
         </div>
 
         {/* Progress Bar */}
