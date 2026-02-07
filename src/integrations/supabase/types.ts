@@ -118,6 +118,68 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connections: {
+        Row: {
+          action: string
+          connection_type: string
+          created_at: string
+          id: string
+          target_user_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          connection_type?: string
+          created_at?: string
+          id?: string
+          target_user_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          connection_type?: string
+          created_at?: string
+          id?: string
+          target_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           category: string
@@ -270,6 +332,33 @@ export type Database = {
         }
         Relationships: []
       }
+      point_history: {
+        Row: {
+          action_id: string | null
+          action_type: string
+          created_at: string
+          id: string
+          points: number
+          user_id: string
+        }
+        Insert: {
+          action_id?: string | null
+          action_type: string
+          created_at?: string
+          id?: string
+          points: number
+          user_id: string
+        }
+        Update: {
+          action_id?: string | null
+          action_type?: string
+          created_at?: string
+          id?: string
+          points?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -301,6 +390,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          comments_count: number
           content: string
           created_at: string
           emoji: string | null
@@ -310,6 +400,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          comments_count?: number
           content: string
           created_at?: string
           emoji?: string | null
@@ -319,6 +410,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          comments_count?: number
           content?: string
           created_at?: string
           emoji?: string | null
@@ -332,12 +424,14 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           currency: string | null
           display_name: string | null
           followers_count: number
           following_count: number
           id: string
+          interests: string[] | null
           language: string | null
           show_achievements: boolean
           updated_at: string
@@ -345,12 +439,14 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           followers_count?: number
           following_count?: number
           id?: string
+          interests?: string[] | null
           language?: string | null
           show_achievements?: boolean
           updated_at?: string
@@ -358,12 +454,14 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           followers_count?: number
           following_count?: number
           id?: string
+          interests?: string[] | null
           language?: string | null
           show_achievements?: boolean
           updated_at?: string
