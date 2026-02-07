@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          current_progress: number
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          current_progress?: number
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          current_progress?: number
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          emoji: string
+          end_date: string
+          id: string
+          is_public: boolean
+          start_date: string
+          target_value: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          emoji?: string
+          end_date: string
+          id?: string
+          is_public?: boolean
+          start_date: string
+          target_value: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          emoji?: string
+          end_date?: string
+          id?: string
+          is_public?: boolean
+          start_date?: string
+          target_value?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           category: string
