@@ -1,4 +1,4 @@
-export type NotificationType = 'achievement' | 'streak' | 'ranking' | 'challenge' | 'level' | 'motivational';
+export type NotificationType = 'achievement' | 'streak' | 'ranking' | 'challenge' | 'level' | 'motivational' | 'follow';
 
 export interface Notification {
   id: string;
@@ -18,6 +18,7 @@ export const NOTIFICATION_ICONS: Record<NotificationType, string> = {
   challenge: '⚔️',
   level: '⬆️',
   motivational: '💡',
+  follow: '👤',
 };
 
 export const NOTIFICATION_COLORS: Record<NotificationType, string> = {
@@ -27,4 +28,5 @@ export const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   challenge: 'from-purple-500 to-pink-500',
   level: 'from-green-500 to-emerald-500',
   motivational: 'from-indigo-500 to-blue-500',
+  follow: 'from-pink-500 to-rose-500',
 };

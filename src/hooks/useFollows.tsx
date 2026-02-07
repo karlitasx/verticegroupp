@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotificationsContext } from "@/contexts/NotificationsContext";
 import { toast } from "sonner";
 
 export interface FollowRelation {
@@ -19,6 +20,7 @@ export interface FollowUser {
 
 export const useFollows = () => {
   const { user } = useAuth();
+  const { notifyNewFollower } = useNotificationsContext();
   const [following, setFollowing] = useState<string[]>([]);
   const [followers, setFollowers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,17 @@ export const useFollows = () => {
       if (error) throw error;
 
       setFollowing(prev => [...prev, targetUserId]);
+      
+      // Fetch follower's display name and notify the target user
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .single();
+      
+      const followerName = profile?.display_name || "Alguém";
+      notifyNewFollower(followerName, user.id);
+      
       toast.success("Seguindo!");
       return true;
     } catch (error: any) {
