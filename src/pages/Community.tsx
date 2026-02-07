@@ -24,6 +24,7 @@ const Community = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<"all" | "following">("all");
   
   const { groups, getFilteredRanking, getUserPosition } = useSocial();
   const { state } = useAchievementsContext();
@@ -44,7 +45,8 @@ const Community = () => {
     createPost,
     deletePost,
     toggleLike,
-  } = useSupabasePosts();
+    refetch: refetchPosts,
+  } = useSupabasePosts(feedFilter === "following");
 
   const {
     shares: achievementShares,
@@ -118,7 +120,7 @@ const Community = () => {
           <TabsContent value="feed" className="animate-fade-in">
             <SocialFeed
               posts={posts}
-              achievementShares={achievementShares}
+              achievementShares={feedFilter === "all" ? achievementShares : []}
               getAchievementById={getAchievementById}
               loading={postsLoading || sharesLoading}
               onCreatePost={async (content, emoji) => {
@@ -129,6 +131,10 @@ const Community = () => {
               onDeletePost={deletePost}
               userAvatar={profile?.avatar_url}
               userName={profile?.display_name || "Usuário"}
+              showFilters={true}
+              onFilterChange={(filter) => {
+                setFeedFilter(filter);
+              }}
             />
           </TabsContent>
 

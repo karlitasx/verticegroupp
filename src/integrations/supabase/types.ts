@@ -172,6 +172,27 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -314,6 +335,8 @@ export type Database = {
           created_at: string
           currency: string | null
           display_name: string | null
+          followers_count: number
+          following_count: number
           id: string
           language: string | null
           show_achievements: boolean
@@ -325,6 +348,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           display_name?: string | null
+          followers_count?: number
+          following_count?: number
           id?: string
           language?: string | null
           show_achievements?: boolean
@@ -336,6 +361,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           display_name?: string | null
+          followers_count?: number
+          following_count?: number
           id?: string
           language?: string | null
           show_achievements?: boolean
