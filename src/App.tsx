@@ -16,6 +16,7 @@ import Community from "./pages/Community";
 import SelfCare from "./pages/SelfCare";
 import Achievements from "./pages/Achievements";
 import Profile from "./pages/Profile";
+import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,11 @@ const App = () => (
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/user/:userId" element={
+                <ProtectedRoute>
+                  <PublicProfile />
                 </ProtectedRoute>
               } />
               

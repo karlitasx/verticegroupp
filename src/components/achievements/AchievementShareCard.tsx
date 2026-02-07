@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Trophy } from "lucide-react";
@@ -5,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AchievementShare } from "@/types/achievement-sharing";
 import { Achievement, RARITY_COLORS, RARITY_LABELS } from "@/types/achievements";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 interface AchievementShareCardProps {
@@ -16,7 +18,18 @@ export const AchievementShareCard = ({
   share,
   achievement,
 }: AchievementShareCardProps) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
   if (!achievement) return null;
+
+  const isOwnShare = user?.id === share.user_id;
+
+  const handleProfileClick = () => {
+    if (!isOwnShare) {
+      navigate(`/user/${share.user_id}`);
+    }
+  };
 
   const timeAgo = formatDistanceToNow(new Date(share.created_at), {
     addSuffix: true,
@@ -35,7 +48,13 @@ export const AchievementShareCard = ({
       <CardContent className="p-4">
         <div className="flex gap-3">
           {/* Avatar */}
-          <Avatar className="h-10 w-10 shrink-0">
+          <Avatar 
+            className={cn(
+              "h-10 w-10 shrink-0",
+              !isOwnShare && "cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+            )}
+            onClick={handleProfileClick}
+          >
             <AvatarImage src={share.author_avatar || undefined} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {share.author_name?.charAt(0).toUpperCase() || "U"}
@@ -45,9 +64,15 @@ export const AchievementShareCard = ({
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-foreground">
+              <button
+                onClick={handleProfileClick}
+                className={cn(
+                  "font-semibold text-foreground",
+                  !isOwnShare && "hover:text-primary hover:underline transition-colors"
+                )}
+              >
                 {share.author_name}
-              </span>
+              </button>
               <span className="text-muted-foreground text-sm">
                 desbloqueou uma conquista
               </span>
