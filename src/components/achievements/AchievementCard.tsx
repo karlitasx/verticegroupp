@@ -1,25 +1,34 @@
-import { Lock } from "lucide-react";
+import { Lock, Share2 } from "lucide-react";
 import { Achievement, RARITY_COLORS, RARITY_LABELS } from "@/types/achievements";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 interface AchievementCardProps {
   achievement: Achievement & { isUnlocked: boolean };
   progress: number;
   onClick?: () => void;
+  onShare?: (achievement: Achievement) => void;
 }
 
-const AchievementCard = ({ achievement, progress, onClick }: AchievementCardProps) => {
+const AchievementCard = ({ achievement, progress, onClick, onShare }: AchievementCardProps) => {
   const isUnlocked = achievement.isUnlocked;
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onShare && isUnlocked) {
+      onShare(achievement);
+    }
+  };
+
   return (
-    <button
+    <div
       onClick={onClick}
       className={cn(
         "relative w-full p-4 rounded-2xl text-left transition-all duration-300",
         isUnlocked 
-          ? "glass-card hover:scale-105 hover:shadow-xl" 
-          : "bg-muted/30 border border-muted/20 opacity-70 hover:opacity-90"
+          ? "glass-card hover:scale-105 hover:shadow-xl cursor-pointer" 
+          : "bg-muted/30 border border-muted/20 opacity-70"
       )}
     >
       {/* Rarity indicator */}
@@ -77,14 +86,27 @@ const AchievementCard = ({ achievement, progress, onClick }: AchievementCardProp
           </p>
 
           {/* Progress or points */}
-          <div className="mt-2">
+          <div className="mt-2 flex items-center justify-between">
             {isUnlocked ? (
-              <div className="flex items-center gap-1 text-xs text-yellow-400 font-medium">
-                <span>🏆</span>
-                <span>+{achievement.points} pts</span>
-              </div>
+              <>
+                <div className="flex items-center gap-1 text-xs text-accent font-medium">
+                  <span>🏆</span>
+                  <span>+{achievement.points} pts</span>
+                </div>
+                {onShare && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShare}
+                    className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Compartilhar
+                  </Button>
+                )}
+              </>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-1 w-full">
                 <Progress value={progress} className="h-1.5" />
                 <p className="text-[10px] text-muted-foreground">
                   {Math.round(progress)}% concluído
@@ -94,7 +116,7 @@ const AchievementCard = ({ achievement, progress, onClick }: AchievementCardProp
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 

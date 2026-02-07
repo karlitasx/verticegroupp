@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievement_shares: {
+        Row: {
+          achievement_id: string
+          created_at: string
+          id: string
+          message: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -292,6 +316,7 @@ export type Database = {
           display_name: string | null
           id: string
           language: string | null
+          show_achievements: boolean
           updated_at: string
           user_id: string
         }
@@ -302,6 +327,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           language?: string | null
+          show_achievements?: boolean
           updated_at?: string
           user_id: string
         }
@@ -312,6 +338,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           language?: string | null
+          show_achievements?: boolean
           updated_at?: string
           user_id?: string
         }

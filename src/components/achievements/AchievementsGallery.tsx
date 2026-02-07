@@ -3,10 +3,13 @@ import { Trophy, Filter, Sparkles } from "lucide-react";
 import { 
   AchievementCategory, 
   CATEGORY_LABELS, 
-  CATEGORY_EMOJIS 
+  CATEGORY_EMOJIS,
+  Achievement
 } from "@/types/achievements";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
+import { useAchievementSharing } from "@/hooks/useAchievementSharing";
 import AchievementCard from "./AchievementCard";
+import { ShareAchievementModal } from "./ShareAchievementModal";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +30,8 @@ const categoryFilters = Object.entries(CATEGORY_LABELS).map(([id, name]) => ({
 const AchievementsGallery = () => {
   const [filter, setFilter] = useState<FilterType>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   const {
     state,
@@ -36,6 +41,8 @@ const AchievementsGallery = () => {
     getAchievementProgress,
     getMotivationalHints,
   } = useAchievementsContext();
+
+  const { shareAchievement } = useAchievementSharing();
 
   const allAchievements = getAllAchievements();
   const unlockedCount = getUnlockedCount();
@@ -62,6 +69,16 @@ const AchievementsGallery = () => {
     return rarityOrder[a.rarity] - rarityOrder[b.rarity];
   });
 
+  const handleShare = (achievement: Achievement) => {
+    setSelectedAchievement(achievement);
+    setShowShareModal(true);
+  };
+
+  const handleShareSubmit = async (achievementId: string, message?: string) => {
+    const result = await shareAchievement(achievementId, message);
+    return !!result;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Stats */}
@@ -81,8 +98,8 @@ const AchievementsGallery = () => {
           
           <div className="text-right">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-400" />
-              <span className="text-2xl font-bold text-yellow-400">{state.totalPoints}</span>
+              <Sparkles className="w-5 h-5 text-accent" />
+              <span className="text-2xl font-bold text-accent">{state.totalPoints}</span>
             </div>
             <p className="text-xs text-muted-foreground">pontos totais</p>
           </div>
@@ -199,6 +216,7 @@ const AchievementsGallery = () => {
             <AchievementCard
               achievement={achievement}
               progress={getAchievementProgress(achievement.id)}
+              onShare={achievement.isUnlocked ? handleShare : undefined}
             />
           </div>
         ))}
@@ -214,6 +232,14 @@ const AchievementsGallery = () => {
           </p>
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareAchievementModal
+        achievement={selectedAchievement}
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        onShare={handleShareSubmit}
+      />
     </div>
   );
 };
