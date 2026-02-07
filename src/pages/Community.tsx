@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Users, Medal, Crown, Filter, Plus, MessageCircle, Target, Flame, MessageSquare } from "lucide-react";
+import { Trophy, Users, Plus, MessageCircle, Target, Flame, MessageSquare } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,12 @@ import XPProgressBar from "@/components/achievements/XPProgressBar";
 import ChallengeCard from "@/components/challenges/ChallengeCard";
 import CreateChallengeModal from "@/components/challenges/CreateChallengeModal";
 import ChallengeLeaderboard from "@/components/challenges/ChallengeLeaderboard";
+import GlobalRanking from "@/components/community/GlobalRanking";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { Challenge } from "@/types/challenges";
-import { LEVEL_EMOJIS, UserLevel } from "@/types/achievements";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type FilterType = "weekly" | "monthly" | "yearly";
-
 const Community = () => {
-  const [filter, setFilter] = useState<FilterType>("weekly");
   const [activeTab, setActiveTab] = useState("feed");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
@@ -56,9 +52,6 @@ const Community = () => {
     getAchievementById,
   } = useAchievementSharing();
   
-  const ranking = getFilteredRanking(filter);
-  const userPosition = getUserPosition();
-  const currentUser = ranking.find(u => u.isCurrentUser);
 
   const activeChallenges = getActiveChallenges();
   const availableChallenges = getAvailableChallenges();
@@ -217,116 +210,8 @@ const Community = () => {
           </TabsContent>
 
           {/* Ranking Tab */}
-          <TabsContent value="ranking" className="space-y-6 animate-fade-in">
-            {/* Filters */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              {(["weekly", "monthly", "yearly"] as FilterType[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105",
-                    filter === f ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                  )}
-                >
-                  {f === "weekly" ? "Semanal" : f === "monthly" ? "Mensal" : "Anual"}
-                </button>
-              ))}
-            </div>
-
-            {/* Podium */}
-            <div className="bg-card rounded-xl border border-border p-6">
-              <h3 className="font-semibold mb-6 text-center text-foreground">🏆 Pódio</h3>
-              <div className="flex items-end justify-center gap-4">
-                {/* 2nd place */}
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center text-2xl mb-2">
-                    {ranking[1]?.avatar}
-                  </div>
-                  <Medal className="w-6 h-6 text-gray-400" />
-                  <p className="text-sm font-medium truncate max-w-16 text-foreground">{ranking[1]?.name.split(" ")[0]}</p>
-                  <p className="text-xs text-muted-foreground">{ranking[1]?.points} pts</p>
-                  <div className="w-16 h-20 bg-gray-500/20 rounded-t-lg mt-2" />
-                </div>
-
-                {/* 1st place */}
-                <div className="flex flex-col items-center -mt-6">
-                  <Crown className="w-6 h-6 text-yellow-400 mb-1 animate-bounce" />
-                  <div className="w-16 h-16 rounded-full bg-yellow-500 flex items-center justify-center text-3xl mb-2 ring-4 ring-yellow-400/30">
-                    {ranking[0]?.avatar}
-                  </div>
-                  <Medal className="w-8 h-8 text-yellow-400" />
-                  <p className="font-bold truncate max-w-20 text-foreground">{ranking[0]?.name.split(" ")[0]}</p>
-                  <p className="text-xs text-yellow-500 font-medium">{ranking[0]?.points} pts</p>
-                  <div className="w-20 h-28 bg-yellow-500/20 rounded-t-lg mt-2" />
-                </div>
-
-                {/* 3rd place */}
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center text-2xl mb-2">
-                    {ranking[2]?.avatar}
-                  </div>
-                  <Medal className="w-6 h-6 text-orange-400" />
-                  <p className="text-sm font-medium truncate max-w-16 text-foreground">{ranking[2]?.name.split(" ")[0]}</p>
-                  <p className="text-xs text-muted-foreground">{ranking[2]?.points} pts</p>
-                  <div className="w-16 h-14 bg-orange-500/20 rounded-t-lg mt-2" />
-                </div>
-              </div>
-            </div>
-
-            {/* Your Position Card */}
-            {currentUser && (
-              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-primary-foreground">
-                    #{userPosition}
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-primary/50 flex items-center justify-center text-2xl">
-                    {currentUser.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-primary">Você</p>
-                    <p className="text-sm text-muted-foreground">{LEVEL_EMOJIS[state.level as UserLevel]} {state.level}</p>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{state.totalPoints}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Full Ranking */}
-            <div className="bg-card rounded-xl border border-border p-4 space-y-2">
-              <h3 className="font-semibold mb-4 text-foreground">Ranking Completo</h3>
-              {ranking.slice(0, 10).map((user, index) => (
-                <div
-                  key={user.id}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl transition-all",
-                    user.isCurrentUser ? "bg-primary/20 border border-primary/30" : "bg-muted/50 hover:bg-muted"
-                  )}
-                >
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
-                    index === 0 ? "bg-yellow-500 text-white" :
-                    index === 1 ? "bg-gray-400 text-white" :
-                    index === 2 ? "bg-orange-500 text-white" :
-                    "bg-muted text-muted-foreground"
-                  )}>
-                    {index + 1}
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-primary/30 flex items-center justify-center text-xl">
-                    {user.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("font-medium truncate", user.isCurrentUser && "text-primary")}>
-                      {user.name} {user.isCurrentUser && "(Você)"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{user.level}</p>
-                  </div>
-                  <p className="font-bold text-foreground">{user.points}</p>
-                </div>
-              ))}
-            </div>
+          <TabsContent value="ranking" className="animate-fade-in">
+            <GlobalRanking />
           </TabsContent>
 
           {/* Groups Tab */}
