@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
+import { useThemeContext } from "@/contexts/ThemeContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ const Profile = () => {
     uploadAvatar 
   } = useProfile();
   const { state, getUnlockedCount, getTotalCount } = useAchievementsContext();
-  
+  const { theme, setTheme } = useThemeContext();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -356,8 +357,13 @@ const Profile = () => {
                       </div>
                     </div>
                     <select 
-                      value={preferences.theme}
-                      onChange={(e) => setPreferences(p => ({ ...p, theme: e.target.value as any }))}
+                      value={theme}
+                      onChange={(e) => {
+                        const newTheme = e.target.value as 'dark' | 'light' | 'system';
+                        setTheme(newTheme);
+                        setPreferences(p => ({ ...p, theme: newTheme }));
+                        toast.success("Tema atualizado!");
+                      }}
                       className="bg-muted border border-border text-foreground px-3 py-1.5 rounded-md text-sm"
                     >
                       <option value="dark">Escuro</option>
