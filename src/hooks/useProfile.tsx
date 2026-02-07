@@ -10,6 +10,8 @@ export interface Profile {
   avatar_url: string | null;
   language: string;
   currency: string;
+  bio: string | null;
+  interests: string[];
   created_at: string;
   updated_at: string;
 }
@@ -68,7 +70,7 @@ export const useProfile = () => {
   }, [fetchProfile]);
 
   // Update profile
-  const updateProfile = useCallback(async (updates: Partial<Pick<Profile, 'display_name' | 'language' | 'currency'>>) => {
+  const updateProfile = useCallback(async (updates: Partial<Pick<Profile, 'display_name' | 'language' | 'currency' | 'bio' | 'interests'>>) => {
     if (!user?.id) return { error: new Error("Not authenticated") };
 
     try {

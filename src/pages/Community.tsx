@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Users, Plus, MessageCircle, Target, Flame, MessageSquare } from "lucide-react";
+import { Trophy, Users, Plus, MessageCircle, Target, Flame, MessageSquare, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import CreateChallengeModal from "@/components/challenges/CreateChallengeModal";
 import ChallengeLeaderboard from "@/components/challenges/ChallengeLeaderboard";
 import GlobalRanking from "@/components/community/GlobalRanking";
 import { SocialFeed } from "@/components/social/SocialFeed";
+import { ConnectionsTab } from "@/components/social/ConnectionsTab";
 import { Challenge } from "@/types/challenges";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -97,22 +98,26 @@ const Community = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted">
+          <TabsList className="grid w-full grid-cols-5 mb-6 bg-muted">
             <TabsTrigger value="feed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Feed
+              <MessageSquare className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Feed</span>
+            </TabsTrigger>
+            <TabsTrigger value="connections" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Sparkles className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Conexões</span>
             </TabsTrigger>
             <TabsTrigger value="challenges" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Target className="w-4 h-4 mr-2" />
-              Desafios
+              <Target className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Desafios</span>
             </TabsTrigger>
             <TabsTrigger value="ranking" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Trophy className="w-4 h-4 mr-2" />
-              Ranking
+              <Trophy className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Ranking</span>
             </TabsTrigger>
             <TabsTrigger value="groups" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Users className="w-4 h-4 mr-2" />
-              Grupos
+              <Users className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Grupos</span>
             </TabsTrigger>
           </TabsList>
 
@@ -136,6 +141,11 @@ const Community = () => {
                 setFeedFilter(filter);
               }}
             />
+          </TabsContent>
+
+          {/* Connections Tab */}
+          <TabsContent value="connections" className="animate-fade-in">
+            <ConnectionsTab />
           </TabsContent>
 
           {/* Challenges Tab */}

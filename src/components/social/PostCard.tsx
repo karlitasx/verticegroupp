@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Heart, Trash2, MoreVertical } from "lucide-react";
+import { Heart, Trash2, MoreVertical, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CommentSection } from "@/components/social/CommentSection";
 import { Post } from "@/types/posts";
 import { cn } from "@/lib/utils";
 
@@ -145,6 +146,14 @@ export const PostCard = ({ post, onLike, onDelete }: PostCardProps) => {
                   />
                   <span>{post.likes_count}</span>
                 </button>
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-4 pt-3 border-t border-border/50">
+                <CommentSection 
+                  postId={post.id} 
+                  initialCount={post.comments_count || 0} 
+                />
               </div>
             </div>
           </div>

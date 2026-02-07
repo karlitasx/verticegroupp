@@ -339,7 +339,46 @@ const Profile = () => {
           </TabsContent>
 
           {/* Settings Tab */}
-          <TabsContent value="settings" className="animate-fade-in">
+          <TabsContent value="settings" className="animate-fade-in space-y-4">
+            {/* Bio & Interests Card */}
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base">Perfil Público</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Bio</label>
+                  <textarea
+                    value={profile?.bio || ""}
+                    onChange={(e) => updateProfile({ bio: e.target.value } as any)}
+                    placeholder="Conte um pouco sobre você..."
+                    className="w-full min-h-[80px] p-3 rounded-lg bg-muted border border-border text-foreground text-sm resize-none"
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(profile?.bio || "").length}/200 caracteres
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Interesses</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: fitness, finanças, leitura (separados por vírgula)"
+                    defaultValue={(profile?.interests || []).join(", ")}
+                    onBlur={(e) => {
+                      const interests = e.target.value.split(",").map(i => i.trim()).filter(Boolean);
+                      updateProfile({ interests } as any);
+                    }}
+                    className="w-full p-3 rounded-lg bg-muted border border-border text-foreground text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Seus interesses ajudam a encontrar conexões
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Preferences Card */}
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-base">Preferências</CardTitle>
