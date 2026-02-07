@@ -9,20 +9,13 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, activeNav = "/" }: DashboardLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="blur-circle w-96 h-96 bg-primary -top-48 -left-48" />
-        <div className="blur-circle w-80 h-80 bg-blue-500 top-1/3 -right-40 animation-delay-200" />
-        <div className="blur-circle w-72 h-72 bg-accent bottom-20 left-1/4 animation-delay-300" />
-      </div>
-
+    <div className="min-h-screen bg-background">
       <Header />
       <Sidebar activeItem={activeNav} />
 
       {/* Main Content */}
-      <main className="pt-16 pb-24 md:pb-8 md:pl-20 lg:pl-64 min-h-screen">
-        <div className="p-4 md:p-6 lg:p-8">
+      <main className="pt-14 pb-20 md:pb-6 md:pl-20 lg:pl-56 min-h-screen">
+        <div className="p-4 md:p-5 lg:p-6 max-w-7xl">
           {children}
         </div>
       </main>

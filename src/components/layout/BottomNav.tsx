@@ -9,8 +9,8 @@ interface BottomNavProps {
 
 const BottomNav = ({ activeItem = "/" }: BottomNavProps) => {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border">
-      <ul className="flex items-center justify-around py-2 px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+      <ul className="flex items-center justify-around py-1 px-1">
         {navItems.map((item) => {
           const isActive = activeItem === item.href;
           const Icon = item.icon;
@@ -20,21 +20,21 @@ const BottomNav = ({ activeItem = "/" }: BottomNavProps) => {
               <a
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300",
+                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors",
                   isActive
-                    ? "text-white"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 <div
                   className={cn(
-                    "p-2 rounded-xl transition-all duration-300",
-                    isActive && "btn-gradient shadow-lg"
+                    "p-1.5 rounded-md transition-colors",
+                    isActive && "bg-primary/10"
                   )}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-[10px] font-medium">{item.label}</span>
               </a>
             </li>
           );

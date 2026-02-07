@@ -30,67 +30,8 @@ const HISTORY_KEY = "vidaflow_habits_history";
 
 const getToday = () => new Date().toISOString().split("T")[0];
 
-const defaultHabits: HabitData[] = [
-  {
-    id: "1",
-    name: "Beber 2L de água",
-    emoji: "💧",
-    category: "health",
-    categoryColor: "green",
-    streak: 12,
-    bestStreak: 15,
-    reminderTime: "08:00",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Meditação 10 minutos",
-    emoji: "🧘",
-    category: "spiritual",
-    categoryColor: "purple",
-    streak: 5,
-    bestStreak: 10,
-    reminderTime: "06:30",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Ler 30 páginas",
-    emoji: "📚",
-    category: "productivity",
-    categoryColor: "blue",
-    streak: 8,
-    bestStreak: 12,
-    reminderTime: "21:00",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    name: "Registrar despesas",
-    emoji: "💰",
-    category: "financial",
-    categoryColor: "yellow",
-    streak: 3,
-    bestStreak: 7,
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "5",
-    name: "Exercício 30min",
-    emoji: "🏃",
-    category: "health",
-    categoryColor: "green",
-    streak: 15,
-    bestStreak: 20,
-    reminderTime: "07:00",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-];
+// No default habits - users start with empty state
+const defaultHabits: HabitData[] = [];
 
 export const useHabits = () => {
   const [habits, setHabits] = useState<HabitData[]>([]);
