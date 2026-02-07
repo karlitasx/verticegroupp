@@ -14,7 +14,254 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      habit_completions: {
+        Row: {
+          completed_at: string
+          completed_date: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          completed_date?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          completed_date?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          best_streak: number
+          category: string
+          category_color: string
+          created_at: string
+          emoji: string
+          id: string
+          is_active: boolean
+          name: string
+          reminder_time: string | null
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          category?: string
+          category_color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          reminder_time?: string | null
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          category?: string
+          category_color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          reminder_time?: string | null
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          currency: string | null
+          display_name: string | null
+          id: string
+          language: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string | null
+          display_name?: string | null
+          id?: string
+          language?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string | null
+          display_name?: string | null
+          id?: string
+          language?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          transaction_date: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          current_streak: number
+          habits_completed: number
+          id: string
+          last_activity_date: string | null
+          level: string
+          longest_streak: number
+          total_points: number
+          transactions_logged: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          habits_completed?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: string
+          longest_streak?: number
+          total_points?: number
+          transactions_logged?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          habits_completed?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: string
+          longest_streak?: number
+          total_points?: number
+          transactions_logged?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_amount: number
+          emoji: string
+          id: string
+          is_completed: boolean
+          name: string
+          priority: string
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number
+          emoji?: string
+          id?: string
+          is_completed?: boolean
+          name: string
+          priority?: string
+          target_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number
+          emoji?: string
+          id?: string
+          is_completed?: boolean
+          name?: string
+          priority?: string
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
