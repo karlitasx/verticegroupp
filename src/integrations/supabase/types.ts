@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          category: string
+          color: string
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          is_completed: boolean
+          is_recurring: boolean
+          recurring_pattern: string | null
+          reminder_minutes: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          is_completed?: boolean
+          is_recurring?: boolean
+          recurring_pattern?: string | null
+          reminder_minutes?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          is_completed?: boolean
+          is_recurring?: boolean
+          recurring_pattern?: string | null
+          reminder_minutes?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_at: string
