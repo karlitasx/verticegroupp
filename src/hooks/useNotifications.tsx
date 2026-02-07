@@ -154,6 +154,17 @@ export const useNotifications = () => {
     );
   }, [addNotification]);
 
+  // Add new follower notification
+  const notifyNewFollower = useCallback((followerName: string, followerUserId: string) => {
+    return addNotification(
+      'follow',
+      'Novo Seguidor!',
+      `${followerName} começou a seguir você`,
+      '👤',
+      `/profile/${followerUserId}`
+    );
+  }, [addNotification]);
+
   return {
     notifications,
     isLoaded,
@@ -170,5 +181,6 @@ export const useNotifications = () => {
     notifyChallenge,
     notifyLevelUp,
     notifyMotivational,
+    notifyNewFollower,
   };
 };
