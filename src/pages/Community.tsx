@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Users, Settings, Medal, Crown, Filter, Plus, MessageCircle, Target, Flame } from "lucide-react";
+import { Trophy, Users, Medal, Crown, Filter, Plus, MessageCircle, Target, Flame, MessageSquare } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,13 @@ import { Progress } from "@/components/ui/progress";
 import { useSocial } from "@/hooks/useSocial";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { useSupabaseChallenges } from "@/hooks/useSupabaseChallenges";
+import { useSupabasePosts } from "@/hooks/useSupabasePosts";
+import { useProfile } from "@/hooks/useProfile";
 import XPProgressBar from "@/components/achievements/XPProgressBar";
 import ChallengeCard from "@/components/challenges/ChallengeCard";
 import CreateChallengeModal from "@/components/challenges/CreateChallengeModal";
 import ChallengeLeaderboard from "@/components/challenges/ChallengeLeaderboard";
+import { SocialFeed } from "@/components/social/SocialFeed";
 import { Challenge } from "@/types/challenges";
 import { LEVEL_EMOJIS, UserLevel } from "@/types/achievements";
 import { cn } from "@/lib/utils";
@@ -20,13 +23,14 @@ type FilterType = "weekly" | "monthly" | "yearly";
 
 const Community = () => {
   const [filter, setFilter] = useState<FilterType>("weekly");
-  const [activeTab, setActiveTab] = useState("challenges");
+  const [activeTab, setActiveTab] = useState("feed");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   const { groups, getFilteredRanking, getUserPosition } = useSocial();
   const { state } = useAchievementsContext();
+  const { profile } = useProfile();
   const { 
     challenges, 
     loading: challengesLoading, 
@@ -36,6 +40,14 @@ const Community = () => {
     getActiveChallenges,
     getAvailableChallenges,
   } = useSupabaseChallenges();
+
+  const {
+    posts,
+    loading: postsLoading,
+    createPost,
+    deletePost,
+    toggleLike,
+  } = useSupabasePosts();
   
   const ranking = getFilteredRanking(filter);
   const userPosition = getUserPosition();
@@ -83,7 +95,11 @@ const Community = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted">
+          <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted">
+            <TabsTrigger value="feed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Feed
+            </TabsTrigger>
             <TabsTrigger value="challenges" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Target className="w-4 h-4 mr-2" />
               Desafios
@@ -97,6 +113,22 @@ const Community = () => {
               Grupos
             </TabsTrigger>
           </TabsList>
+
+          {/* Feed Tab */}
+          <TabsContent value="feed" className="animate-fade-in">
+            <SocialFeed
+              posts={posts}
+              loading={postsLoading}
+              onCreatePost={async (content, emoji) => {
+                const result = await createPost({ content, emoji });
+                return !!result;
+              }}
+              onLikePost={toggleLike}
+              onDeletePost={deletePost}
+              userAvatar={profile?.avatar_url}
+              userName={profile?.display_name || "Usuário"}
+            />
+          </TabsContent>
 
           {/* Challenges Tab */}
           <TabsContent value="challenges" className="space-y-6 animate-fade-in">
