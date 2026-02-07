@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Heart, Trash2, MoreVertical } from "lucide-react";
@@ -33,6 +34,7 @@ interface PostCardProps {
 export const PostCard = ({ post, onLike, onDelete }: PostCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const navigate = useNavigate();
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -46,6 +48,12 @@ export const PostCard = ({ post, onLike, onDelete }: PostCardProps) => {
     setShowDeleteDialog(false);
   };
 
+  const handleProfileClick = () => {
+    if (!post.is_own) {
+      navigate(`/user/${post.user_id}`);
+    }
+  };
+
   const timeAgo = formatDistanceToNow(new Date(post.created_at), {
     addSuffix: true,
     locale: ptBR,
@@ -57,7 +65,13 @@ export const PostCard = ({ post, onLike, onDelete }: PostCardProps) => {
         <CardContent className="p-4">
           <div className="flex gap-3">
             {/* Avatar */}
-            <Avatar className="h-10 w-10 shrink-0">
+            <Avatar 
+              className={cn(
+                "h-10 w-10 shrink-0",
+                !post.is_own && "cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+              )}
+              onClick={handleProfileClick}
+            >
               <AvatarImage src={post.author_avatar || undefined} />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {post.author_name?.charAt(0).toUpperCase() || "U"}
@@ -68,9 +82,15 @@ export const PostCard = ({ post, onLike, onDelete }: PostCardProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-foreground">
+                  <button
+                    onClick={handleProfileClick}
+                    className={cn(
+                      "font-semibold text-foreground",
+                      !post.is_own && "hover:text-primary hover:underline transition-colors"
+                    )}
+                  >
                     {post.author_name}
-                  </span>
+                  </button>
                   <span className="text-xs text-muted-foreground">
                     {timeAgo}
                   </span>
