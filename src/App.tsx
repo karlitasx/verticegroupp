@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Habits from "./pages/Habits";
+import Agenda from "./pages/Agenda";
 import Finances from "./pages/Finances";
 import Community from "./pages/Community";
 import SelfCare from "./pages/SelfCare";
@@ -41,6 +42,11 @@ const App = () => (
               <Route path="/habits" element={
                 <ProtectedRoute>
                   <Habits />
+                </ProtectedRoute>
+              } />
+              <Route path="/agenda" element={
+                <ProtectedRoute>
+                  <Agenda />
                 </ProtectedRoute>
               } />
               <Route path="/finances" element={
