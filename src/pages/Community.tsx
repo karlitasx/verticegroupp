@@ -8,6 +8,7 @@ import { useSocial } from "@/hooks/useSocial";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { useSupabaseChallenges } from "@/hooks/useSupabaseChallenges";
 import { useSupabasePosts } from "@/hooks/useSupabasePosts";
+import { useAchievementSharing } from "@/hooks/useAchievementSharing";
 import { useProfile } from "@/hooks/useProfile";
 import XPProgressBar from "@/components/achievements/XPProgressBar";
 import ChallengeCard from "@/components/challenges/ChallengeCard";
@@ -48,6 +49,12 @@ const Community = () => {
     deletePost,
     toggleLike,
   } = useSupabasePosts();
+
+  const {
+    shares: achievementShares,
+    loading: sharesLoading,
+    getAchievementById,
+  } = useAchievementSharing();
   
   const ranking = getFilteredRanking(filter);
   const userPosition = getUserPosition();
@@ -118,7 +125,9 @@ const Community = () => {
           <TabsContent value="feed" className="animate-fade-in">
             <SocialFeed
               posts={posts}
-              loading={postsLoading}
+              achievementShares={achievementShares}
+              getAchievementById={getAchievementById}
+              loading={postsLoading || sharesLoading}
               onCreatePost={async (content, emoji) => {
                 const result = await createPost({ content, emoji });
                 return !!result;
