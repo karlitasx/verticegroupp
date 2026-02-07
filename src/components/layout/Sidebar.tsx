@@ -1,21 +1,7 @@
-import { Home, Target, DollarSign, User, Trophy, Heart, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getDesktopNavItems } from "@/lib/navigation";
 
-interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-}
-
-const navItems: NavItem[] = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: Target, label: "Hábitos", href: "/habits" },
-  { icon: DollarSign, label: "Finanças", href: "/finances" },
-  { icon: Heart, label: "Autocuidado", href: "/selfcare" },
-  { icon: Award, label: "Conquistas", href: "/achievements" },
-  { icon: Trophy, label: "Comunidade", href: "/community" },
-  { icon: User, label: "Perfil", href: "/profile" },
-];
+const navItems = getDesktopNavItems();
 
 interface SidebarProps {
   activeItem?: string;

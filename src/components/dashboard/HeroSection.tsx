@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Clock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const motivationalQuotes = [
   "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
@@ -23,43 +24,20 @@ const motivationalQuotes = [
   "Desafios são oportunidades disfarçadas.",
   "Quem tem um porquê enfrenta qualquer como.",
   "A excelência não é um ato, mas um hábito.",
-  "Sonhe grande, comece pequeno, aja agora.",
-  "Você não precisa ser perfeito para começar.",
-  "O único limite é a sua imaginação.",
-  "Cada pequena vitória conta.",
-  "Você está mais perto do que pensa.",
-  "A consistência supera o talento.",
-  "Sua história de sucesso começa hoje.",
-  "Seja paciente, as grandes coisas levam tempo.",
-  "O impossível é apenas uma opinião.",
-  "Você nasceu para brilhar.",
-  "Acredite no processo.",
-  "A melhor versão de você está sendo construída.",
-  "Seja imparável.",
-  "Cada esforço importa.",
-  "O futuro pertence aos que acreditam.",
-  "Você é capaz de mais do que imagina.",
-  "A mudança começa dentro de você.",
-  "Não desista, o melhor está por vir.",
-  "Sua dedicação é sua força.",
-  "Transforme obstáculos em trampolins.",
-  "O sucesso é uma escolha diária.",
-  "Você é o autor da sua história.",
-  "A disciplina é liberdade.",
-  "Seja grato e determinado.",
-  "O esforço de hoje é o resultado de amanhã.",
-  "Você merece o sucesso que busca.",
-  "A vitória ama a preparação.",
-  "Nunca subestime seu potencial.",
-  "O caminho é feito ao caminhar.",
-  "Você está no controle da sua vida.",
 ];
 
 const HeroSection = () => {
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [quote] = useState(() => 
-    motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]
+  
+  // Memoize quote to prevent re-renders
+  const quote = useMemo(
+    () => motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)],
+    []
   );
+
+  // Load avatar from localStorage
+  const avatarUrl = useMemo(() => localStorage.getItem("vidaflow_avatar"), []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -93,7 +71,19 @@ const HeroSection = () => {
     });
   };
 
-  const userName = "Maria";
+  // Get user's name from metadata or extract from email
+  const userName = user?.user_metadata?.full_name 
+    || user?.email?.split("@")[0] 
+    || "Usuário";
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 mb-8 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 border border-white/10">
@@ -106,9 +96,9 @@ const HeroSection = () => {
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
           <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-white/20 relative cursor-pointer hover:scale-105 transition-transform">
-            <AvatarImage src="/placeholder.svg" alt={userName} />
+            <AvatarImage src={avatarUrl || undefined} alt={userName} />
             <AvatarFallback className="text-3xl md:text-4xl bg-gradient-to-br from-primary to-accent text-white">
-              {userName.charAt(0)}
+              {getInitials(userName)}
             </AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-background flex items-center justify-center">

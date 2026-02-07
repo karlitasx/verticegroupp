@@ -1,19 +1,7 @@
-import { Home, Target, DollarSign, Heart, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getMobileNavItems } from "@/lib/navigation";
 
-interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-}
-
-const navItems: NavItem[] = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: Target, label: "Hábitos", href: "/habits" },
-  { icon: Heart, label: "Cuidado", href: "/selfcare" },
-  { icon: Award, label: "Conquistas", href: "/achievements" },
-  { icon: DollarSign, label: "Finanças", href: "/finances" },
-];
+const navItems = getMobileNavItems();
 
 interface BottomNavProps {
   activeItem?: string;
