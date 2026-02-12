@@ -202,6 +202,21 @@ const Profile = () => {
                 </label>
               </div>
             </div>
+            {/* Upload button visible on mobile */}
+            <label className="absolute -top-2 left-[72px] bg-primary text-primary-foreground rounded-full p-1.5 cursor-pointer shadow-md hover:bg-primary/90 transition-colors md:hidden">
+              {isUploading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5" />
+              )}
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleAvatarChange}
+                className="hidden"
+                disabled={isUploading}
+              />
+            </label>
 
             {/* User Info */}
             <div className="ml-28 pt-2">
