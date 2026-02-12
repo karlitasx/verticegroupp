@@ -138,7 +138,7 @@ const Profile = () => {
     toast.success("Preferência salva!");
   };
 
-  const StatCard = ({ icon: Icon, label, value, subValue }: { 
+  const ProfileStatCard = ({ icon: Icon, label, value, subValue }: { 
     icon: React.ElementType; 
     label: string; 
     value: string | number; 
@@ -289,23 +289,23 @@ const Profile = () => {
           {/* Stats Tab */}
           <TabsContent value="stats" className="space-y-4 animate-fade-in">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard 
+              <ProfileStatCard 
                 icon={Target} 
                 label="Hábitos completados" 
                 value={habitsCompleted}
               />
-              <StatCard 
+              <ProfileStatCard 
                 icon={Flame} 
                 label="Streak atual" 
                 value={`${currentStreak} dias`}
                 subValue={longestStreak > 0 ? `Recorde: ${longestStreak} dias` : undefined}
               />
-              <StatCard 
+              <ProfileStatCard 
                 icon={Trophy} 
                 label="Conquistas" 
                 value={`${achievementsUnlocked}/${totalAchievements}`}
               />
-              <StatCard 
+              <ProfileStatCard 
                 icon={Star} 
                 label="XP Total" 
                 value={totalPoints.toLocaleString()}
