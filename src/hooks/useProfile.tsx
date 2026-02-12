@@ -76,8 +76,7 @@ export const useProfile = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update(updates)
-        .eq("user_id", user.id);
+        .upsert({ user_id: user.id, ...updates }, { onConflict: 'user_id' });
 
       if (error) throw error;
       
@@ -128,11 +127,10 @@ export const useProfile = () => {
 
       const avatarUrlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
 
-      // Update profile with new avatar URL
+      // Update profile with new avatar URL (upsert in case profile doesn't exist)
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: avatarUrlWithCacheBust })
-        .eq("user_id", user.id);
+        .upsert({ user_id: user.id, avatar_url: avatarUrlWithCacheBust }, { onConflict: 'user_id' });
 
       if (updateError) throw updateError;
 
