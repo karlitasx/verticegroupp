@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
+import { usePreferences } from "@/contexts/PreferencesContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ const Profile = () => {
   } = useProfile();
   const { state, getUnlockedCount, getTotalCount } = useAchievementsContext();
   const { theme, setTheme } = useThemeContext();
+  const { currency, language, setCurrency, setLanguage, t } = usePreferences();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   
@@ -124,7 +126,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await signOut();
-    toast.success("Até logo! 👋");
+    toast.success(t('profile.goodbye'));
   };
 
   const updateNotificationPreference = (key: keyof UserPreferences['notifications'], value: boolean) => {
@@ -135,7 +137,7 @@ const Profile = () => {
         [key]: value
       }
     }));
-    toast.success("Preferência salva!");
+    toast.success(t('profile.preferenceSaved'));
   };
 
   const ProfileStatCard = ({ icon: Icon, label, value, subValue }: { 
@@ -274,15 +276,15 @@ const Profile = () => {
           <TabsList className="bg-card border border-border p-1 w-full">
             <TabsTrigger value="stats" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <TrendingUp className="w-4 h-4 mr-2" />
-              Estatísticas
+              {t('profile.stats')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <User className="w-4 h-4 mr-2" />
-              Configurações
+              {t('profile.settings')}
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Bell className="w-4 h-4 mr-2" />
-              Notificações
+              {t('profile.notifications')}
             </TabsTrigger>
           </TabsList>
 
@@ -291,23 +293,23 @@ const Profile = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <ProfileStatCard 
                 icon={Target} 
-                label="Hábitos completados" 
+                label={t('profile.habitsCompleted')}
                 value={habitsCompleted}
               />
               <ProfileStatCard 
                 icon={Flame} 
-                label="Streak atual" 
-                value={`${currentStreak} dias`}
-                subValue={longestStreak > 0 ? `Recorde: ${longestStreak} dias` : undefined}
+                label={t('profile.currentStreak')}
+                value={`${currentStreak} ${t('dashboard.days')}`}
+                subValue={longestStreak > 0 ? `${t('profile.record')}: ${longestStreak} ${t('dashboard.days')}` : undefined}
               />
               <ProfileStatCard 
                 icon={Trophy} 
-                label="Conquistas" 
+                label={t('profile.achievements')}
                 value={`${achievementsUnlocked}/${totalAchievements}`}
               />
               <ProfileStatCard 
                 icon={Star} 
-                label="XP Total" 
+                label={t('profile.totalXP')}
                 value={totalPoints.toLocaleString()}
               />
             </div>
@@ -358,27 +360,27 @@ const Profile = () => {
             {/* Bio & Interests Card */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-base">Perfil Público</CardTitle>
+                <CardTitle className="text-base">{t('profile.publicProfile')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Bio</label>
+                  <label className="text-sm font-medium mb-2 block">{t('profile.bio')}</label>
                   <textarea
                     value={profile?.bio || ""}
                     onChange={(e) => updateProfile({ bio: e.target.value } as any)}
-                    placeholder="Conte um pouco sobre você..."
+                    placeholder={t('profile.bioPlaceholder')}
                     className="w-full min-h-[80px] p-3 rounded-lg bg-muted border border-border text-foreground text-sm resize-none"
                     maxLength={200}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(profile?.bio || "").length}/200 caracteres
+                    {(profile?.bio || "").length}/200 {t('profile.characters')}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Interesses</label>
+                  <label className="text-sm font-medium mb-2 block">{t('profile.interests')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: fitness, finanças, leitura (separados por vírgula)"
+                    placeholder={t('profile.interestsPlaceholder')}
                     defaultValue={(profile?.interests || []).join(", ")}
                     onBlur={(e) => {
                       const interests = e.target.value.split(",").map(i => i.trim()).filter(Boolean);
@@ -387,7 +389,7 @@ const Profile = () => {
                     className="w-full p-3 rounded-lg bg-muted border border-border text-foreground text-sm"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Seus interesses ajudam a encontrar conexões
+                    {t('profile.interestsHelp')}
                   </p>
                 </div>
               </CardContent>
@@ -396,7 +398,7 @@ const Profile = () => {
             {/* Preferences Card */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-base">Preferências</CardTitle>
+                <CardTitle className="text-base">{t('profile.preferences')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-4">
@@ -406,8 +408,8 @@ const Profile = () => {
                         <Moon className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Tema</p>
-                        <p className="text-xs text-muted-foreground">Aparência do app</p>
+                        <p className="text-sm font-medium">{t('profile.theme')}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.themeDesc')}</p>
                       </div>
                     </div>
                     <select 
@@ -416,13 +418,13 @@ const Profile = () => {
                         const newTheme = e.target.value as 'dark' | 'light' | 'system';
                         setTheme(newTheme);
                         setPreferences(p => ({ ...p, theme: newTheme }));
-                        toast.success("Tema atualizado!");
+                        toast.success(t('profile.themeUpdated'));
                       }}
                       className="bg-muted border border-border text-foreground px-3 py-1.5 rounded-md text-sm"
                     >
-                      <option value="dark">Escuro</option>
-                      <option value="light">Claro</option>
-                      <option value="system">Sistema</option>
+                      <option value="dark">{t('profile.themeDark')}</option>
+                      <option value="light">{t('profile.themeLight')}</option>
+                      <option value="system">{t('profile.themeSystem')}</option>
                     </select>
                   </div>
 
@@ -432,14 +434,15 @@ const Profile = () => {
                         <Globe className="w-4 h-4 text-accent" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Idioma</p>
-                        <p className="text-xs text-muted-foreground">Idioma da interface</p>
+                        <p className="text-sm font-medium">{t('profile.language')}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.languageDesc')}</p>
                       </div>
                     </div>
                     <select 
-                      value={preferences.language}
+                      value={language}
                       onChange={(e) => {
                         const newLang = e.target.value as 'pt-BR' | 'en-US' | 'es';
+                        setLanguage(newLang);
                         setPreferences(p => ({ ...p, language: newLang }));
                         updateProfile({ language: newLang });
                       }}
@@ -457,14 +460,15 @@ const Profile = () => {
                         <DollarSign className="w-4 h-4 text-success" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Moeda</p>
-                        <p className="text-xs text-muted-foreground">Moeda para exibição</p>
+                        <p className="text-sm font-medium">{t('profile.currency')}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.currencyDesc')}</p>
                       </div>
                     </div>
                     <select 
-                      value={preferences.currency}
+                      value={currency}
                       onChange={(e) => {
                         const newCurrency = e.target.value as 'BRL' | 'USD' | 'EUR';
+                        setCurrency(newCurrency);
                         setPreferences(p => ({ ...p, currency: newCurrency }));
                         updateProfile({ currency: newCurrency });
                       }}
@@ -484,7 +488,7 @@ const Profile = () => {
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sair da conta
+                    {t('profile.logout')}
                   </Button>
                 </div>
               </CardContent>
