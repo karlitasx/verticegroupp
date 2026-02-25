@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { AchievementsProvider } from "@/contexts/AchievementsContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/admin/AdminRoute";
 import Index from "./pages/Index";
@@ -27,7 +28,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <PreferencesProvider>
         <AchievementsProvider>
           <NotificationsProvider>
             <TooltipProvider>
@@ -101,6 +103,7 @@ const App = () => (
           </TooltipProvider>
         </NotificationsProvider>
       </AchievementsProvider>
+    </PreferencesProvider>
     </ThemeProvider>
   </AuthProvider>
 </QueryClientProvider>

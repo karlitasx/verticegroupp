@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { getMobileNavItems } from "@/lib/navigation";
+import { usePreferences } from "@/contexts/PreferencesContext";
 
 const navItems = getMobileNavItems();
 
@@ -8,6 +9,8 @@ interface BottomNavProps {
 }
 
 const BottomNav = ({ activeItem = "/" }: BottomNavProps) => {
+  const { t } = usePreferences();
+  
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
       <ul className="flex items-center justify-around py-1 px-1">
@@ -34,7 +37,7 @@ const BottomNav = ({ activeItem = "/" }: BottomNavProps) => {
                 >
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
               </a>
             </li>
           );

@@ -3,6 +3,7 @@ import { Home, Target, DollarSign, User, Trophy, Heart, Award, LucideIcon } from
 export interface NavItem {
   icon: LucideIcon;
   label: string;
+  labelKey: string;
   href: string;
   mobileOnly?: boolean;
   desktopOnly?: boolean;
@@ -10,13 +11,13 @@ export interface NavItem {
 
 // Navigation items shared across Sidebar and BottomNav
 export const navigationItems: NavItem[] = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: Target, label: "Hábitos", href: "/habits" },
-  { icon: DollarSign, label: "Finanças", href: "/finances" },
-  { icon: Heart, label: "Autocuidado", href: "/selfcare" },
-  { icon: Award, label: "Conquistas", href: "/achievements" },
-  { icon: Trophy, label: "Comunidade", href: "/community", desktopOnly: true },
-  { icon: User, label: "Perfil", href: "/profile", desktopOnly: true },
+  { icon: Home, label: "Home", labelKey: "nav.dashboard", href: "/" },
+  { icon: Target, label: "Hábitos", labelKey: "nav.habits", href: "/habits" },
+  { icon: DollarSign, label: "Finanças", labelKey: "nav.finances", href: "/finances" },
+  { icon: Heart, label: "Autocuidado", labelKey: "nav.selfcare", href: "/selfcare" },
+  { icon: Award, label: "Conquistas", labelKey: "nav.achievements", href: "/achievements" },
+  { icon: Trophy, label: "Comunidade", labelKey: "nav.community", href: "/community", desktopOnly: true },
+  { icon: User, label: "Perfil", labelKey: "nav.profile", href: "/profile", desktopOnly: true },
 ];
 
 // Get items for mobile bottom nav (limited space)

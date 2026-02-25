@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { getDesktopNavItems } from "@/lib/navigation";
+import { usePreferences } from "@/contexts/PreferencesContext";
 
 const navItems = getDesktopNavItems();
 
@@ -8,6 +9,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeItem = "/" }: SidebarProps) => {
+  const { t } = usePreferences();
+  
   return (
     <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-20 lg:w-56 bg-sidebar border-r border-sidebar-border flex-col py-4 z-40">
       <nav className="flex-1 px-2">
@@ -29,7 +32,7 @@ const Sidebar = ({ activeItem = "/" }: SidebarProps) => {
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="text-sm font-medium hidden lg:block">
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                 </a>
               </li>
