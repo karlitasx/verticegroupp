@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,27 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+  Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import {
-  ShoppingBag,
-  Utensils,
-  Car,
-  Home,
-  Gamepad2,
-  Heart,
-  GraduationCap,
-  Briefcase,
-  Banknote,
-  Gift,
-} from "lucide-react";
+import { personalCategories, businessCategories, type FinanceCategory } from "@/lib/financeCategories";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  financeType?: "personal" | "business";
   onAdd: (transaction: {
     description: string;
     category: string;
@@ -41,26 +26,18 @@ interface AddTransactionModalProps {
     type: "income" | "expense";
     date: Date;
     recurring: boolean;
+    finance_type?: "personal" | "business";
+    cnpj?: string;
+    invoice_number?: string;
+    cost_center?: string;
   }) => void;
 }
-
-const categories = [
-  { name: "Alimentação", icon: Utensils, color: "#f97316" },
-  { name: "Transporte", icon: Car, color: "#3b82f6" },
-  { name: "Moradia", icon: Home, color: "#8b5cf6" },
-  { name: "Lazer", icon: Gamepad2, color: "#ec4899" },
-  { name: "Saúde", icon: Heart, color: "#ef4444" },
-  { name: "Educação", icon: GraduationCap, color: "#14b8a6" },
-  { name: "Compras", icon: ShoppingBag, color: "#f59e0b" },
-  { name: "Salário", icon: Briefcase, color: "#22c55e" },
-  { name: "Investimento", icon: Banknote, color: "#6366f1" },
-  { name: "Presente", icon: Gift, color: "#a855f7" },
-];
 
 const AddTransactionModal = ({
   isOpen,
   onClose,
   onAdd,
+  financeType = "personal",
 }: AddTransactionModalProps) => {
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
@@ -68,6 +45,13 @@ const AddTransactionModal = ({
   const [category, setCategory] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [recurring, setRecurring] = useState(false);
+  // Business fields
+  const [cnpj, setCnpj] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [costCenter, setCostCenter] = useState("");
+
+  const categories: FinanceCategory[] = financeType === "business" ? businessCategories : personalCategories;
+  const isBusiness = financeType === "business";
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -85,15 +69,21 @@ const AddTransactionModal = ({
       type,
       date,
       recurring,
+      finance_type: financeType,
+      ...(isBusiness && cnpj ? { cnpj } : {}),
+      ...(isBusiness && invoiceNumber ? { invoice_number: invoiceNumber } : {}),
+      ...(isBusiness && costCenter ? { cost_center: costCenter } : {}),
     });
 
-    // Reset form
     setAmount("");
     setDescription("");
     setCategory("");
     setDate(new Date());
     setRecurring(false);
     setType("expense");
+    setCnpj("");
+    setInvoiceNumber("");
+    setCostCenter("");
     onClose();
   };
 
@@ -107,20 +97,22 @@ const AddTransactionModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900/95 border-white/20 max-w-md">
+      <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova Transação</DialogTitle>
+          <DialogTitle>
+            {isBusiness ? "Nova Transação Empresarial" : "Nova Transação"}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 pt-4">
+        <div className="space-y-5 pt-4">
           {/* Type Toggle */}
           <div className="flex gap-2">
             <button
               onClick={() => setType("expense")}
               className={`flex-1 py-3 rounded-xl font-medium transition-all ${
                 type === "expense"
-                  ? "bg-red-500/20 text-red-400 border border-red-400"
-                  : "bg-glass hover:bg-white/10"
+                  ? "bg-destructive/20 text-destructive border border-destructive"
+                  : "bg-muted hover:bg-muted/80"
               }`}
             >
               Despesa
@@ -129,8 +121,8 @@ const AddTransactionModal = ({
               onClick={() => setType("income")}
               className={`flex-1 py-3 rounded-xl font-medium transition-all ${
                 type === "income"
-                  ? "bg-green-500/20 text-green-400 border border-green-400"
-                  : "bg-glass hover:bg-white/10"
+                  ? "bg-green-500/20 text-green-500 border border-green-500"
+                  : "bg-muted hover:bg-muted/80"
               }`}
             >
               Receita
@@ -140,15 +132,13 @@ const AddTransactionModal = ({
           {/* Amount */}
           <div className="space-y-2">
             <Label>Valor</Label>
-            <div className="relative">
-              <Input
-                type="text"
-                value={formatDisplayAmount()}
-                onChange={handleAmountChange}
-                className="text-2xl font-bold h-14 bg-glass border-white/20 text-center"
-                placeholder="R$ 0,00"
-              />
-            </div>
+            <Input
+              type="text"
+              value={formatDisplayAmount()}
+              onChange={handleAmountChange}
+              className="text-2xl font-bold h-14 text-center"
+              placeholder="R$ 0,00"
+            />
           </div>
 
           {/* Description */}
@@ -157,10 +147,40 @@ const AddTransactionModal = ({
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-glass border-white/20"
-              placeholder="Ex: Almoço no restaurante"
+              placeholder={isBusiness ? "Ex: Pagamento fornecedor" : "Ex: Almoço no restaurante"}
             />
           </div>
+
+          {/* Business-specific fields */}
+          {isBusiness && (
+            <div className="space-y-3 p-3 rounded-xl bg-muted/50 border border-border">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dados Empresariais</p>
+              <div className="space-y-2">
+                <Label>CNPJ</Label>
+                <Input
+                  value={cnpj}
+                  onChange={(e) => setCnpj(e.target.value)}
+                  placeholder="00.000.000/0000-00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nº Nota Fiscal</Label>
+                <Input
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  placeholder="Ex: NF-001234"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Centro de Custo</Label>
+                <Input
+                  value={costCenter}
+                  onChange={(e) => setCostCenter(e.target.value)}
+                  placeholder="Ex: Marketing, Operações"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Category Grid */}
           <div className="space-y-2">
@@ -174,8 +194,8 @@ const AddTransactionModal = ({
                     onClick={() => setCategory(cat.name)}
                     className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
                       category === cat.name
-                        ? "ring-2 ring-primary bg-white/10"
-                        : "bg-glass hover:bg-white/10"
+                        ? "ring-2 ring-primary bg-primary/10"
+                        : "bg-muted hover:bg-muted/80"
                     }`}
                     title={cat.name}
                   >
@@ -185,9 +205,7 @@ const AddTransactionModal = ({
               })}
             </div>
             {category && (
-              <p className="text-sm text-muted-foreground text-center">
-                {category}
-              </p>
+              <p className="text-sm text-muted-foreground text-center">{category}</p>
             )}
           </div>
 
@@ -199,7 +217,7 @@ const AddTransactionModal = ({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal bg-glass border-white/20",
+                    "w-full justify-start text-left font-normal",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -207,7 +225,7 @@ const AddTransactionModal = ({
                   {date ? format(date, "dd/MM/yyyy") : "Selecione uma data"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/20" align="start">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -233,16 +251,12 @@ const AddTransactionModal = ({
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button
-              variant="ghost"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button variant="ghost" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
             <Button
               onClick={handleSubmit}
-              className="flex-1 logo-gradient"
+              className="flex-1 btn-gradient"
               disabled={!amount || !description || !category}
             >
               Adicionar

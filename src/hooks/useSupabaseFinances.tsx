@@ -11,6 +11,10 @@ export interface Transaction {
   type: "income" | "expense";
   date: Date;
   recurring?: boolean;
+  finance_type?: "personal" | "business";
+  cnpj?: string;
+  invoice_number?: string;
+  cost_center?: string;
 }
 
 interface FinanceStats {
@@ -20,7 +24,7 @@ interface FinanceStats {
   savingsRate: number;
 }
 
-export const useSupabaseFinances = () => {
+export const useSupabaseFinances = (financeType?: "personal" | "business") => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -35,21 +39,30 @@ export const useSupabaseFinances = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
-        .order("transaction_date", { ascending: false });
+        .eq("user_id", user.id);
+      
+      if (financeType) {
+        query = query.eq("finance_type", financeType);
+      }
+      
+      const { data, error } = await query.order("transaction_date", { ascending: false });
 
       if (error) throw error;
 
-      const mappedTransactions: Transaction[] = (data || []).map(t => ({
+      const mappedTransactions: Transaction[] = (data || []).map((t: any) => ({
         id: t.id,
         description: t.description || "",
         category: t.category,
         amount: Number(t.amount),
         type: t.type as "income" | "expense",
         date: new Date(t.transaction_date),
+        finance_type: t.finance_type || "personal",
+        cnpj: t.cnpj || undefined,
+        invoice_number: t.invoice_number || undefined,
+        cost_center: t.cost_center || undefined,
       }));
 
       setTransactions(mappedTransactions);
@@ -58,7 +71,7 @@ export const useSupabaseFinances = () => {
     } finally {
       setIsLoaded(true);
     }
-  }, [user]);
+  }, [user, financeType]);
 
   useEffect(() => {
     fetchTransactions();
@@ -81,16 +94,22 @@ export const useSupabaseFinances = () => {
     if (!user) return null;
 
     try {
+      const insertData: any = {
+        user_id: user.id,
+        description: transaction.description,
+        category: transaction.category,
+        amount: transaction.amount,
+        type: transaction.type,
+        transaction_date: transaction.date.toISOString().split("T")[0],
+        finance_type: transaction.finance_type || financeType || "personal",
+      };
+      if (transaction.cnpj) insertData.cnpj = transaction.cnpj;
+      if (transaction.invoice_number) insertData.invoice_number = transaction.invoice_number;
+      if (transaction.cost_center) insertData.cost_center = transaction.cost_center;
+
       const { data, error } = await supabase
         .from("transactions")
-        .insert({
-          user_id: user.id,
-          description: transaction.description,
-          category: transaction.category,
-          amount: transaction.amount,
-          type: transaction.type,
-          transaction_date: transaction.date.toISOString().split("T")[0],
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -103,6 +122,10 @@ export const useSupabaseFinances = () => {
         amount: Number(data.amount),
         type: data.type as "income" | "expense",
         date: new Date(data.transaction_date),
+        finance_type: (data as any).finance_type || "personal",
+        cnpj: (data as any).cnpj || undefined,
+        invoice_number: (data as any).invoice_number || undefined,
+        cost_center: (data as any).cost_center || undefined,
       };
 
       setTransactions(prev => [newTransaction, ...prev]);
@@ -156,6 +179,20 @@ export const useSupabaseFinances = () => {
       "Educação": "#14b8a6",
       "Investimento / Objetivo": "#10b981",
       "Salário": "#22c55e",
+      "Compras": "#f59e0b",
+      "Investimento": "#6366f1",
+      "Presente": "#a855f7",
+      // Business
+      "Receita de Vendas": "#22c55e",
+      "Serviços Prestados": "#3b82f6",
+      "Fornecedores": "#f97316",
+      "Folha de Pagamento": "#8b5cf6",
+      "Impostos": "#ef4444",
+      "Aluguel Comercial": "#6366f1",
+      "Marketing": "#ec4899",
+      "Materiais/Estoque": "#f59e0b",
+      "Nota Fiscal": "#14b8a6",
+      "Despesas Gerais": "#6b7280",
     };
 
     return Array.from(categoryMap.entries()).map(([name, value]) => ({

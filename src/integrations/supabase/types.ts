@@ -524,9 +524,13 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          cnpj: string | null
+          cost_center: string | null
           created_at: string
           description: string | null
+          finance_type: string
           id: string
+          invoice_number: string | null
           transaction_date: string
           type: string
           user_id: string
@@ -534,9 +538,13 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          cnpj?: string | null
+          cost_center?: string | null
           created_at?: string
           description?: string | null
+          finance_type?: string
           id?: string
+          invoice_number?: string | null
           transaction_date?: string
           type: string
           user_id: string
@@ -544,9 +552,13 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          cnpj?: string | null
+          cost_center?: string | null
           created_at?: string
           description?: string | null
+          finance_type?: string
           id?: string
+          invoice_number?: string | null
           transaction_date?: string
           type?: string
           user_id?: string

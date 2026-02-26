@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, DollarSign, Star, Wallet } from "lucide-react";
+import { Plus, DollarSign, Star, Wallet, ArrowLeft, Building2, User } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SummaryCards from "@/components/finances/SummaryCards";
 import FinanceBarChart from "@/components/finances/FinanceBarChart";
@@ -9,6 +9,7 @@ import AddTransactionModal from "@/components/finances/AddTransactionModal";
 import FinanceFilters from "@/components/finances/FinanceFilters";
 import SavingsGoal from "@/components/finances/SavingsGoal";
 import WishlistTab from "@/components/finances/WishlistTab";
+import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,12 +17,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useSupabaseFinances } from "@/hooks/useSupabaseFinances";
 
 const Finances = () => {
-  const { transactions, isLoaded, stats, addTransaction, deleteTransaction, filterTransactions, getCategoryData } = useSupabaseFinances();
+  const [financeType, setFinanceType] = useState<FinanceType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [selectedType, setSelectedType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("overview");
+
+  const { transactions, isLoaded, stats, addTransaction, deleteTransaction, filterTransactions, getCategoryData } =
+    useSupabaseFinances(financeType || undefined);
 
   const categoryData = getCategoryData();
 
@@ -32,6 +36,10 @@ const Finances = () => {
     type: "income" | "expense";
     date: Date;
     recurring: boolean;
+    finance_type?: "personal" | "business";
+    cnpj?: string;
+    invoice_number?: string;
+    cost_center?: string;
   }) => {
     await addTransaction({
       description: transaction.description,
@@ -39,6 +47,10 @@ const Finances = () => {
       amount: transaction.amount,
       type: transaction.type,
       date: transaction.date,
+      finance_type: transaction.finance_type,
+      cnpj: transaction.cnpj,
+      invoice_number: transaction.invoice_number,
+      cost_center: transaction.cost_center,
     });
   };
 
@@ -59,10 +71,25 @@ const Finances = () => {
       amount,
       type: "expense",
       date: new Date(),
+      finance_type: financeType || "personal",
     });
   };
 
+  // Show type selector if not chosen
+  if (!financeType) {
+    return (
+      <DashboardLayout activeNav="/finances">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <FinanceTypeSelector onSelect={setFinanceType} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   const filteredTransactions = filterTransactions(selectedType);
+  const isBusiness = financeType === "business";
+  const typeLabel = isBusiness ? "Empresariais" : "Pessoais";
+  const TypeIcon = isBusiness ? Building2 : User;
 
   if (!isLoaded) {
     return (
@@ -91,12 +118,24 @@ const Finances = () => {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setFinanceType(null)}
+            className="shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div className="p-3 rounded-xl bg-primary/20">
-            <DollarSign className="w-6 h-6 text-primary" />
+            <TypeIcon className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Finanças</h1>
-            <p className="text-muted-foreground">Gerencie suas receitas e despesas</p>
+            <h1 className="text-2xl font-bold">Finanças {typeLabel}</h1>
+            <p className="text-muted-foreground">
+              {isBusiness
+                ? "Gerencie o fluxo de caixa do seu negócio"
+                : "Gerencie suas receitas e despesas pessoais"}
+            </p>
           </div>
         </div>
 
@@ -114,14 +153,14 @@ const Finances = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-muted/50">
-          <TabsTrigger 
-            value="overview" 
+          <TabsTrigger
+            value="overview"
             className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             <DollarSign className="w-4 h-4 mr-2" />
             Visão Geral
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="wishlist"
             className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
@@ -135,7 +174,11 @@ const Finances = () => {
             <EmptyState
               icon={Wallet}
               title="Nenhuma transação ainda"
-              description="Registre sua primeira receita ou despesa para começar a acompanhar suas finanças."
+              description={
+                isBusiness
+                  ? "Registre a primeira transação empresarial para acompanhar seu fluxo de caixa."
+                  : "Registre sua primeira receita ou despesa para começar a acompanhar suas finanças."
+              }
               action={{
                 label: "Adicionar Transação",
                 onClick: () => setIsModalOpen(true),
@@ -143,10 +186,7 @@ const Finances = () => {
             />
           ) : (
             <>
-              {/* Summary Cards */}
               <SummaryCards balance={stats.balance} income={stats.income} expenses={stats.expenses} />
-
-              {/* Filters */}
               <FinanceFilters
                 selectedPeriod={selectedPeriod}
                 selectedType={selectedType}
@@ -154,13 +194,9 @@ const Finances = () => {
                 onTypeChange={setSelectedType}
                 onClearFilters={handleClearFilters}
               />
-
-              {/* Main Content Grid */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Left Column - Charts */}
                 <div className="xl:col-span-2 space-y-6">
                   <FinanceBarChart />
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <CategoryDonut
                       data={categoryData}
@@ -175,14 +211,9 @@ const Finances = () => {
                     />
                   </div>
                 </div>
-
-                {/* Right Column - Transactions */}
                 <div className="xl:col-span-1">
                   <TransactionsList
-                    transactions={filteredTransactions.map(t => ({
-                      ...t,
-                      date: t.date,
-                    }))}
+                    transactions={filteredTransactions.map(t => ({ ...t, date: t.date }))}
                     onDelete={handleDeleteTransaction}
                     categoryFilter={selectedCategory}
                   />
@@ -197,11 +228,11 @@ const Finances = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Transaction Modal */}
       <AddTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddTransaction}
+        financeType={financeType}
       />
     </DashboardLayout>
   );
