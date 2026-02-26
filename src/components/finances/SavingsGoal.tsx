@@ -48,7 +48,7 @@ const SavingsGoal = ({ goal, current, monthlyExpenses, budgetLimit }: SavingsGoa
           <div className="flex justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Economizado</p>
-              <p className="font-semibold text-green-400">{formatCurrency(current)}</p>
+              <p className="font-semibold text-green-500">{formatCurrency(current)}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Meta</p>

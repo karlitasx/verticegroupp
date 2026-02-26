@@ -132,7 +132,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900/95 border-white/20 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingWish ? "Editar Desejo" : "Novo Desejo"}</DialogTitle>
         </DialogHeader>
@@ -148,7 +148,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
               className={`relative h-32 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
                 isDragging
                   ? "border-primary bg-primary/10"
-                  : "border-white/20 hover:border-white/40"
+                  : "border-border hover:border-muted-foreground"
               }`}
             >
               <input
@@ -169,7 +169,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                       e.stopPropagation();
                       setImageUrl("");
                     }}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70"
+                    className="absolute top-2 right-2 p-1 rounded-full bg-background/50 hover:bg-background/70"
                   >
                     ✕
                   </button>
@@ -189,7 +189,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-glass border-white/20"
+              className="bg-input border-border"
               placeholder="Ex: MacBook Pro"
             />
           </div>
@@ -202,7 +202,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                 type="number"
                 value={totalValue}
                 onChange={(e) => setTotalValue(e.target.value)}
-                className="bg-glass border-white/20"
+                className="bg-input border-border"
                 placeholder="R$ 0,00"
               />
             </div>
@@ -212,7 +212,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                 type="number"
                 value={savedValue}
                 onChange={(e) => setSavedValue(e.target.value)}
-                className="bg-glass border-white/20"
+                className="bg-input border-border"
                 placeholder="R$ 0,00"
               />
             </div>
@@ -227,7 +227,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                   key={p.value}
                   onClick={() => setPriority(p.value as "high" | "medium" | "low")}
                   className={`flex-1 py-2 rounded-lg font-medium border transition-all ${
-                    priority === p.value ? p.color : "border-white/20 hover:bg-white/5"
+                    priority === p.value ? p.color : "border-border hover:bg-muted"
                   }`}
                 >
                   {p.label}
@@ -247,7 +247,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                   className={`py-2 px-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
                     category === cat.name
                       ? "bg-primary/20 border border-primary text-primary"
-                      : "bg-glass border border-white/10 hover:bg-white/10"
+                      : "bg-muted border border-border hover:bg-muted/80"
                   }`}
                 >
                   <span>{cat.emoji}</span>
@@ -266,7 +266,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
             <Input
               value={link}
               onChange={(e) => setLink(e.target.value)}
-              className="bg-glass border-white/20"
+              className="bg-input border-border"
               placeholder="https://loja.com.br/produto"
             />
           </div>
@@ -279,7 +279,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal bg-glass border-white/20",
+                    "w-full justify-start text-left font-normal bg-input border-border",
                     !targetDate && "text-muted-foreground"
                   )}
                 >
@@ -287,7 +287,7 @@ const AddWishModal = ({ isOpen, onClose, onSave, editingWish }: AddWishModalProp
                   {targetDate ? format(targetDate, "dd/MM/yyyy") : "Selecione uma data"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/20" align="start">
+              <PopoverContent className="w-auto p-0 bg-popover border-border" align="start">
                 <Calendar
                   mode="single"
                   selected={targetDate}

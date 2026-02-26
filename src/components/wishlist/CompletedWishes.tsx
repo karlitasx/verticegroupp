@@ -39,7 +39,7 @@ const CompletedWishes = ({ wishes }: CompletedWishesProps) => {
             key={wish.id}
             className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20"
           >
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-glass flex-shrink-0">
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
               {wish.imageUrl ? (
                 <img
                   src={wish.imageUrl}
@@ -67,7 +67,7 @@ const CompletedWishes = ({ wishes }: CompletedWishesProps) => {
         ))}
       </div>
 
-      <div className="mt-4 p-3 rounded-xl bg-glass text-center">
+      <div className="mt-4 p-3 rounded-xl bg-muted text-center">
         <p className="text-sm text-muted-foreground">Total conquistado</p>
         <p className="text-xl font-bold text-green-400">
           {formatCurrency(completedWishes.reduce((sum, w) => sum + w.totalValue, 0))}

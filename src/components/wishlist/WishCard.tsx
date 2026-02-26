@@ -124,7 +124,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
               {getMilestones().map((milestone) => (
                 <div
                   key={milestone}
-                  className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm"
+                  className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/50 backdrop-blur-sm"
                 >
                   <Trophy className="w-3 h-3 text-yellow-400" />
                   <span className="text-xs font-medium text-yellow-400">
@@ -141,7 +141,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
               href={wish.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute top-2 right-2 p-2 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors"
+              className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -149,7 +149,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
 
           {/* Completed Badge */}
           {wish.completed && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
               <span className="text-2xl font-bold text-green-400">
                 ✓ Conquistado!
               </span>
@@ -165,13 +165,13 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
             <div className="flex gap-1">
               <button
                 onClick={() => onEdit(wish)}
-                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
               >
                 <Edit2 className="w-4 h-4 text-muted-foreground" />
               </button>
               <button
                 onClick={() => onDelete(wish.id)}
-                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
               >
                 <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-400" />
               </button>
@@ -181,7 +181,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
           {/* Badges */}
           <div className="flex gap-2 flex-wrap">
             <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColors[wish.priority]} bg-white/10`}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColors[wish.priority]} bg-muted`}
             >
               {priorityLabels[wish.priority]}
             </span>
@@ -204,7 +204,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
 
           {/* Progress Bar */}
           <div className="space-y-1">
-            <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
+            <div className="relative h-3 rounded-full bg-muted overflow-hidden">
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
                 style={{ width: `${progress}%` }}
@@ -234,7 +234,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
 
       {/* Add Value Modal */}
       <Dialog open={isAddValueOpen} onOpenChange={setIsAddValueOpen}>
-        <DialogContent className="bg-slate-900/95 border-white/20 max-w-sm">
+        <DialogContent className="bg-card border-border max-w-sm">
           <DialogHeader>
             <DialogTitle>Adicionar Valor</DialogTitle>
           </DialogHeader>
@@ -247,7 +247,7 @@ const WishCard = ({ wish, onAddValue, onEdit, onDelete }: WishCardProps) => {
               value={addValue}
               onChange={(e) => setAddValue(e.target.value)}
               placeholder="R$ 0,00"
-              className="bg-glass border-white/20 text-lg"
+              className="bg-input border-border text-lg"
             />
             <div className="flex gap-3">
               <Button
