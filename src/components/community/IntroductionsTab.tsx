@@ -48,15 +48,15 @@ const IntroductionsTab = () => {
   return (
     <div className="space-y-6">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50 p-8 md:p-12 text-center">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50 p-6 sm:p-8 md:p-12 text-center">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.3),transparent_70%)]" />
         <div className="relative z-10 space-y-4">
-          <div className="text-5xl mb-2">😊</div>
-          <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">
+          <div className="text-4xl sm:text-5xl mb-2">😊</div>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary-foreground">
             Apresentações da comunidade
           </h2>
-          <p className="text-primary-foreground/80 max-w-lg mx-auto text-sm md:text-base">
-            Conheça outros membros, compartilhe seus objetivos e mostre pra comunidade que você chegou pra ficar!
+          <p className="text-primary-foreground/80 max-w-lg mx-auto text-xs sm:text-sm md:text-base">
+            Conheça outros membros, compartilhe seus objetivos e mostre que você chegou pra ficar!
           </p>
           <Button
             onClick={handleOpenModal}
@@ -79,14 +79,14 @@ const IntroductionsTab = () => {
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">Apresentações recentes</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 className="text-base sm:text-lg font-bold">Apresentações recentes</h3>
         <div className="flex items-center gap-2">
           <div className="flex gap-1 p-1 bg-muted rounded-lg">
             <button
               onClick={() => setSortMode("recent")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all",
                 sortMode === "recent"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -98,7 +98,7 @@ const IntroductionsTab = () => {
             <button
               onClick={() => setSortMode("popular")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all",
                 sortMode === "popular"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -108,9 +108,9 @@ const IntroductionsTab = () => {
               Populares
             </button>
           </div>
-          <Button variant="outline" size="sm" onClick={refetch} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={refetch} className="gap-1.5 text-xs sm:text-sm">
             <RefreshCw className="w-3.5 h-3.5" />
-            Atualizar
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
         </div>
       </div>
@@ -141,7 +141,7 @@ const IntroductionsTab = () => {
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-card border-border max-w-lg">
+        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {myIntroduction ? "Editar sua apresentação" : "Faça sua apresentação"}
@@ -153,26 +153,26 @@ const IntroductionsTab = () => {
             </p>
 
             {/* Live Preview */}
-            <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-9 w-9 border-2 border-primary/20">
+            <div className="bg-muted/50 border border-border rounded-xl p-3 sm:p-4 space-y-2">
+              <div className="flex items-center gap-2.5">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border-2 border-primary/20">
                   <AvatarImage src={profileAvatar || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
                     {profileName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-semibold">Apresentação de {profileName}</p>
+                  <p className="text-xs sm:text-sm font-semibold">Apresentação de {profileName}</p>
                   <p className="text-xs text-muted-foreground">Agora</p>
                 </div>
               </div>
-              <div className="pl-12 space-y-1.5">
+              <div className="pl-10 sm:pl-12 space-y-1.5">
                 <p className="text-xs font-semibold">Sobre mim:</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {content.trim() || "Conte um pouco sobre você..."}
                 </p>
                 <p className="text-xs font-semibold mt-2">Meus objetivos:</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {goals.trim() || "Compartilhe seus objetivos..."}
                 </p>
               </div>
@@ -236,22 +236,22 @@ const IntroductionCard = ({ introduction, isOwn, onNavigate }: IntroductionCardP
   const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 space-y-4 transition-all hover:shadow-md">
+    <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4 transition-all hover:shadow-md">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <div
-          className="flex items-center gap-3 cursor-pointer min-w-0"
+          className="flex items-center gap-2.5 cursor-pointer min-w-0"
           onClick={() => onNavigate(introduction.user_id)}
         >
-          <Avatar className="h-11 w-11 border-2 border-primary/20 shrink-0">
+          <Avatar className="h-10 w-10 sm:h-11 sm:w-11 border-2 border-primary/20 shrink-0">
             <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs sm:text-sm">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="font-semibold text-foreground truncate">{displayName}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground truncate text-sm sm:text-base">{displayName}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {format(new Date(introduction.created_at), "dd/MM/yyyy, HH:mm", { locale: ptBR })}
             </p>
           </div>
