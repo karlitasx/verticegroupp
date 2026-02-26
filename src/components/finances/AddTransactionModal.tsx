@@ -27,9 +27,6 @@ interface AddTransactionModalProps {
     date: Date;
     recurring: boolean;
     finance_type?: "personal" | "business";
-    cnpj?: string;
-    invoice_number?: string;
-    cost_center?: string;
   }) => void;
 }
 
@@ -45,13 +42,8 @@ const AddTransactionModal = ({
   const [category, setCategory] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [recurring, setRecurring] = useState(false);
-  // Business fields
-  const [cnpj, setCnpj] = useState("");
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [costCenter, setCostCenter] = useState("");
 
   const categories: FinanceCategory[] = financeType === "business" ? businessCategories : personalCategories;
-  const isBusiness = financeType === "business";
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -70,9 +62,6 @@ const AddTransactionModal = ({
       date,
       recurring,
       finance_type: financeType,
-      ...(isBusiness && cnpj ? { cnpj } : {}),
-      ...(isBusiness && invoiceNumber ? { invoice_number: invoiceNumber } : {}),
-      ...(isBusiness && costCenter ? { cost_center: costCenter } : {}),
     });
 
     setAmount("");
@@ -81,9 +70,6 @@ const AddTransactionModal = ({
     setDate(new Date());
     setRecurring(false);
     setType("expense");
-    setCnpj("");
-    setInvoiceNumber("");
-    setCostCenter("");
     onClose();
   };
 
@@ -100,7 +86,7 @@ const AddTransactionModal = ({
       <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isBusiness ? "Nova Transação Empresarial" : "Nova Transação"}
+            {financeType === "business" ? "Nova Transação Empresarial" : "Nova Transação"}
           </DialogTitle>
         </DialogHeader>
 
@@ -147,40 +133,9 @@ const AddTransactionModal = ({
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={isBusiness ? "Ex: Pagamento fornecedor" : "Ex: Almoço no restaurante"}
+              placeholder={financeType === "business" ? "Ex: Pagamento fornecedor" : "Ex: Almoço no restaurante"}
             />
           </div>
-
-          {/* Business-specific fields */}
-          {isBusiness && (
-            <div className="space-y-3 p-3 rounded-xl bg-muted/50 border border-border">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dados Empresariais</p>
-              <div className="space-y-2">
-                <Label>CNPJ</Label>
-                <Input
-                  value={cnpj}
-                  onChange={(e) => setCnpj(e.target.value)}
-                  placeholder="00.000.000/0000-00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nº Nota Fiscal</Label>
-                <Input
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                  placeholder="Ex: NF-001234"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Centro de Custo</Label>
-                <Input
-                  value={costCenter}
-                  onChange={(e) => setCostCenter(e.target.value)}
-                  placeholder="Ex: Marketing, Operações"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Category Grid */}
           <div className="space-y-2">
