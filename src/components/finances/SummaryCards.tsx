@@ -1,12 +1,13 @@
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react";
 
 interface SummaryCardsProps {
   balance: number;
   income: number;
   expenses: number;
+  investments?: number;
 }
 
-const SummaryCards = ({ balance, income, expenses }: SummaryCardsProps) => {
+const SummaryCards = ({ balance, income, expenses, investments = 0 }: SummaryCardsProps) => {
   const formatCurrency = (value: number) => {
     return value.toLocaleString("pt-BR", {
       style: "currency",
@@ -14,58 +15,67 @@ const SummaryCards = ({ balance, income, expenses }: SummaryCardsProps) => {
     });
   };
 
+  const cards = [
+    {
+      label: "Receitas",
+      sublabel: "Total de entradas",
+      value: income,
+      icon: TrendingUp,
+      iconColor: "text-green-500",
+      iconBg: "bg-green-500/10",
+      valueColor: "text-green-500",
+    },
+    {
+      label: "Despesas",
+      sublabel: "Total de saídas",
+      value: expenses,
+      icon: TrendingDown,
+      iconColor: "text-red-500",
+      iconBg: "bg-red-500/10",
+      valueColor: "text-red-500",
+    },
+    {
+      label: "Investimentos",
+      sublabel: "Total investido",
+      value: investments,
+      icon: BarChart3,
+      iconColor: "text-violet-500",
+      iconBg: "bg-violet-500/10",
+      valueColor: "text-violet-500",
+    },
+    {
+      label: "Saldo Atual",
+      sublabel: "Resultado positivo",
+      value: balance,
+      icon: Wallet,
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
+      valueColor: balance >= 0 ? "text-primary" : "text-red-500",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-      {/* Balance Card */}
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-white/20">
-              <Wallet className="w-5 h-5" />
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <div
+            key={card.label}
+            className="glass-card p-4 md:p-5 rounded-2xl flex flex-col gap-3 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">{card.label}</span>
+              <div className={`p-2 rounded-lg ${card.iconBg}`}>
+                <Icon className={`w-4 h-4 ${card.iconColor}`} />
+              </div>
             </div>
-            <span className="text-sm font-medium text-white/80">Saldo Total</span>
+            <p className={`text-xl md:text-2xl font-bold ${card.valueColor}`}>
+              {formatCurrency(card.value)}
+            </p>
+            <p className="text-xs text-muted-foreground">{card.sublabel}</p>
           </div>
-          <p className="text-3xl md:text-4xl font-bold">{formatCurrency(balance)}</p>
-          <p className="text-sm text-white/60 mt-2">Atualizado agora</p>
-        </div>
-      </div>
-
-      {/* Income Card */}
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-white/20">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-medium text-white/80">Receitas do Mês</span>
-          </div>
-          <p className="text-3xl md:text-4xl font-bold">{formatCurrency(income)}</p>
-          <div className="flex items-center gap-1 mt-2">
-            <TrendingUp className="w-4 h-4 text-white/80" />
-            <span className="text-sm text-white/80">+12% vs mês anterior</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Expenses Card */}
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-white/20">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-medium text-white/80">Despesas do Mês</span>
-          </div>
-          <p className="text-3xl md:text-4xl font-bold">{formatCurrency(expenses)}</p>
-          <div className="flex items-center gap-1 mt-2">
-            <TrendingDown className="w-4 h-4 text-white/80" />
-            <span className="text-sm text-white/80">-5% vs mês anterior</span>
-          </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 };
