@@ -50,7 +50,7 @@ const WishCalculator = ({ totalRemaining }: WishCalculatorProps) => {
             min="1"
             value={months}
             onChange={(e) => setMonths(e.target.value)}
-            className="bg-glass border-white/20"
+            className="bg-input border-border"
             placeholder="12"
           />
         </div>
@@ -78,7 +78,7 @@ const WishCalculator = ({ totalRemaining }: WishCalculatorProps) => {
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                 months === m.toString()
                   ? "bg-primary text-primary-foreground"
-                  : "bg-glass hover:bg-white/10"
+                  : "bg-muted hover:bg-muted/80"
               }`}
             >
               {m} meses
