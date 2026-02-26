@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { Users, ArrowRight, Clock, Star, Sparkles, Crown, TrendingUp } from "lucide-react";
+import { useState, useRef } from "react";
+import { Users, ArrowRight, Clock, Star, Sparkles, Crown, TrendingUp, Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Group {
   id: string;
@@ -14,7 +16,25 @@ interface Group {
   isJoined: boolean;
   comingSoon?: boolean;
   accent: string;
+  defaultBanner: string;
 }
+
+const BANNER_STORAGE_KEY = "group-banners-urls";
+
+const getStoredBanners = (): Record<string, string> => {
+  try {
+    const stored = localStorage.getItem(BANNER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+const storeBannerUrl = (groupId: string, url: string) => {
+  const banners = getStoredBanners();
+  banners[groupId] = url;
+  localStorage.setItem(BANNER_STORAGE_KEY, JSON.stringify(banners));
+};
 
 const mockGroups: Group[] = [
   {
@@ -26,6 +46,7 @@ const mockGroups: Group[] = [
     emoji: "💰",
     isJoined: true,
     accent: "hsl(var(--primary))",
+    defaultBanner: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=200&fit=crop",
   },
   {
     id: "2",
@@ -36,6 +57,7 @@ const mockGroups: Group[] = [
     emoji: "📚",
     isJoined: true,
     accent: "hsl(var(--secondary))",
+    defaultBanner: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&h=200&fit=crop",
   },
   {
     id: "3",
@@ -47,6 +69,7 @@ const mockGroups: Group[] = [
     isJoined: false,
     comingSoon: true,
     accent: "hsl(var(--accent))",
+    defaultBanner: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&h=200&fit=crop",
   },
   {
     id: "4",
@@ -58,6 +81,7 @@ const mockGroups: Group[] = [
     isJoined: false,
     comingSoon: true,
     accent: "hsl(var(--warning))",
+    defaultBanner: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=600&h=200&fit=crop",
   },
   {
     id: "5",
@@ -68,6 +92,7 @@ const mockGroups: Group[] = [
     emoji: "🧘‍♀️",
     isJoined: false,
     accent: "hsl(var(--success))",
+    defaultBanner: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=200&fit=crop",
   },
   {
     id: "6",
@@ -78,11 +103,59 @@ const mockGroups: Group[] = [
     emoji: "🎯",
     isJoined: false,
     accent: "hsl(var(--ring))",
+    defaultBanner: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&h=200&fit=crop",
   },
 ];
 
 const GroupCard = ({ group, index }: { group: Group; index: number }) => {
   const [hovered, setHovered] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [bannerUrl, setBannerUrl] = useState(() => {
+    const stored = getStoredBanners();
+    return stored[group.id] || group.defaultBanner;
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione uma imagem.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `group-${group.id}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("group-banners")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("group-banners")
+        .getPublicUrl(fileName);
+
+      setBannerUrl(urlData.publicUrl);
+      storeBannerUrl(group.id, urlData.publicUrl);
+      toast.success("Banner atualizado!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao enviar imagem.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <div
@@ -91,55 +164,76 @@ const GroupCard = ({ group, index }: { group: Group; index: number }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Accent bar */}
-      <div
-        className="h-1.5 w-full transition-all duration-500"
-        style={{
-          background: group.accent,
-          opacity: hovered ? 1 : 0.6,
-        }}
-      />
+      {/* Banner Image */}
+      <div className="relative h-32 sm:h-36 overflow-hidden">
+        <img
+          src={bannerUrl}
+          alt={`Banner ${group.name}`}
+          className="w-full h-full object-cover transition-transform duration-700"
+          style={{ transform: hovered ? "scale(1.05)" : "scale(1)" }}
+        />
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-      {/* Content */}
-      <div className="p-5 flex-1 flex flex-col gap-3">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span
-              className="text-3xl transition-transform duration-500 inline-block"
-              style={{ transform: hovered ? "scale(1.15) rotate(-5deg)" : "scale(1) rotate(0deg)" }}
-            >
-              {group.emoji}
-            </span>
-            <div className="min-w-0">
-              <h3 className="font-bold text-foreground text-base leading-tight truncate">
-                {group.name}
-              </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-[10px] px-2 py-0 font-medium">
-                  {group.category}
-                </Badge>
-                {group.comingSoon && (
-                  <Badge variant="outline" className="text-[10px] px-2 py-0 font-medium gap-1 text-muted-foreground">
-                    <Clock className="w-2.5 h-2.5" />
-                    Em Breve
-                  </Badge>
-                )}
-                {group.isJoined && (
-                  <Crown className="w-3.5 h-3.5 text-primary" />
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Edit banner button */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="absolute top-2.5 right-2.5 p-2 rounded-full bg-black/40 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/60 transition-all duration-300 opacity-0 group-hover:opacity-100"
+          title="Alterar banner"
+        >
+          {uploading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Camera className="w-4 h-4" />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleBannerUpload}
+        />
+
+        {/* Badges on banner */}
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+          <Badge className="bg-black/30 text-white border-0 backdrop-blur-sm text-[10px] font-medium">
+            {group.category}
+          </Badge>
+          {group.comingSoon && (
+            <Badge className="bg-accent/80 text-accent-foreground border-0 backdrop-blur-sm text-[10px] font-medium gap-1">
+              <Clock className="w-2.5 h-2.5" />
+              Em Breve
+            </Badge>
+          )}
         </div>
 
-        {/* Description */}
+        {/* Title on banner */}
+        <div className="absolute bottom-3 left-4 right-4 flex items-end gap-2.5">
+          <span
+            className="text-2xl transition-transform duration-500 inline-block drop-shadow-md"
+            style={{ transform: hovered ? "scale(1.15) rotate(-5deg)" : "scale(1) rotate(0deg)" }}
+          >
+            {group.emoji}
+          </span>
+          <h3 className="font-bold text-white text-base leading-tight drop-shadow-md truncate">
+            {group.name}
+          </h3>
+          {group.isJoined && (
+            <Crown className="w-4 h-4 text-warning drop-shadow-md flex-shrink-0" />
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex-1 flex flex-col gap-3">
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
           {group.description}
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-2 flex items-center justify-between gap-3">
+        <div className="mt-auto pt-1 flex items-center justify-between gap-3">
           {!group.comingSoon && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
