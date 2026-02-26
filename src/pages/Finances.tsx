@@ -10,6 +10,7 @@ import FinanceFilters from "@/components/finances/FinanceFilters";
 import SavingsGoal from "@/components/finances/SavingsGoal";
 import WishlistTab from "@/components/finances/WishlistTab";
 import MetasKanban from "@/components/finances/MetasKanban";
+import OrganizationTab from "@/components/finances/OrganizationTab";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -269,7 +270,7 @@ const Finances = () => {
 
         {/* Organização */}
         <TabsContent value="organization" className="animate-fade-in mt-6">
-          <WishlistTab onSavingsTransaction={handleSavingsTransaction} />
+          <OrganizationTab financeType={financeType} />
         </TabsContent>
       </Tabs>
 
