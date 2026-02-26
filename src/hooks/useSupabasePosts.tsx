@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePoints } from "@/hooks/usePoints";
 import { Post, CreatePostInput } from "@/types/posts";
 import { toast } from "sonner";
 
 export const useSupabasePosts = (filterByFollowing: boolean = false) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
@@ -113,7 +115,10 @@ export const useSupabasePosts = (filterByFollowing: boolean = false) => {
 
       if (error) throw error;
 
-      toast.success("Post publicado!");
+      // Award 10 points for creating a post
+      await awardPoints("post_create", data.id);
+
+      toast.success("Post publicado! +10 pontos 🎉");
       await fetchPosts();
       return data as Post;
     } catch (error) {
@@ -174,6 +179,35 @@ export const useSupabasePosts = (filterByFollowing: boolean = false) => {
           });
 
         if (error) throw error;
+
+        // Award 2 points to the liker (dar curtida)
+        await awardPoints("post_like", `like_${postId}`);
+
+        // Award 2 points to the post owner (receber curtida) - only if not self-like
+        if (post.user_id !== user.id) {
+          // Insert point_history for post owner
+          const { data: ownerStats } = await supabase
+            .from("user_stats")
+            .select("total_points")
+            .eq("user_id", post.user_id)
+            .single();
+
+          if (ownerStats) {
+            await supabase
+              .from("point_history")
+              .insert({
+                user_id: post.user_id,
+                action_type: "post_liked_received",
+                action_id: `received_${postId}_${user.id}`,
+                points: 2,
+              });
+
+            await supabase
+              .from("user_stats")
+              .update({ total_points: (ownerStats.total_points || 0) + 2 })
+              .eq("user_id", post.user_id);
+          }
+        }
       }
 
       await fetchPosts();
