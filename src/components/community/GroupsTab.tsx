@@ -42,9 +42,10 @@ const mockGroups: Group[] = [
     name: "Educação Financeira",
     description: "Aprenda a organizar suas finanças, investir com segurança e construir uma vida financeira equilibrada.",
     category: "Finanças",
-    members: 697,
+    members: 0,
     emoji: "💰",
-    isJoined: true,
+    isJoined: false,
+    comingSoon: true,
     accent: "hsl(var(--primary))",
     defaultBanner: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=200&fit=crop",
   },
@@ -53,9 +54,10 @@ const mockGroups: Group[] = [
     name: "Clube do Livro",
     description: "Compartilhe suas leituras favoritas, discuta livros sobre finanças, desenvolvimento pessoal e histórias inspiradoras.",
     category: "Cultura",
-    members: 260,
+    members: 0,
     emoji: "📚",
-    isJoined: true,
+    isJoined: false,
+    comingSoon: true,
     accent: "hsl(var(--secondary))",
     defaultBanner: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&h=200&fit=crop",
   },
@@ -88,9 +90,10 @@ const mockGroups: Group[] = [
     name: "Autocuidado & Bem-estar",
     description: "Troque experiências sobre saúde mental, rotinas de autocuidado e hábitos saudáveis com outras mulheres.",
     category: "Saúde",
-    members: 183,
+    members: 0,
     emoji: "🧘‍♀️",
     isJoined: false,
+    comingSoon: true,
     accent: "hsl(var(--success))",
     defaultBanner: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=200&fit=crop",
   },
@@ -99,9 +102,10 @@ const mockGroups: Group[] = [
     name: "Metas & Produtividade",
     description: "Defina metas, compartilhe conquistas e mantenha-se motivada com apoio da comunidade.",
     category: "Produtividade",
-    members: 312,
+    members: 0,
     emoji: "🎯",
     isJoined: false,
+    comingSoon: true,
     accent: "hsl(var(--ring))",
     defaultBanner: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&h=200&fit=crop",
   },
@@ -233,30 +237,8 @@ const GroupCard = ({ group, index }: { group: Group; index: number }) => {
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-1 flex items-center justify-between gap-3">
-          {!group.comingSoon && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
-              <span className="font-medium">{group.members}</span>
-              <span>membros</span>
-              {group.members > 500 && (
-                <TrendingUp className="w-3 h-3 text-success ml-1" />
-              )}
-            </div>
-          )}
-
-          {group.comingSoon ? (
-            <span className="text-xs text-muted-foreground italic ml-auto">Disponível em breve 🎉</span>
-          ) : group.isJoined ? (
-            <Button size="sm" variant="outline" className="ml-auto text-xs gap-1.5 rounded-full px-4 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors duration-300">
-              Ver Grupo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-            </Button>
-          ) : (
-            <Button size="sm" className="ml-auto text-xs gap-1.5 rounded-full px-4 transition-all duration-300">
-              <Sparkles className="w-3.5 h-3.5" />
-              Participar
-            </Button>
-          )}
+        <div className="mt-auto pt-1 flex items-end justify-end">
+          <span className="text-xs text-muted-foreground italic">Disponível em breve 🎉</span>
         </div>
       </div>
     </div>
