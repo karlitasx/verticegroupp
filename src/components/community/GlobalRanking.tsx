@@ -24,7 +24,7 @@ const PodiumCard = ({
       bg: "bg-gradient-to-br from-yellow-400 to-amber-500",
       podiumHeight: "h-24 sm:h-28",
       podiumBg: "bg-yellow-500/20",
-      icon: <Crown className="w-6 h-6 text-yellow-400 mb-1 animate-pulse" style={{ animationDuration: "1.5s" }} />,
+      icon: <Crown className="w-6 h-6 text-yellow-400 mb-1 animate-bounce" style={{ animationDuration: "1.5s" }} />,
       medalColor: "text-yellow-400",
       medalSize: "w-7 h-7 sm:w-8 sm:h-8",
       nameClass: "font-bold text-sm sm:text-base",
