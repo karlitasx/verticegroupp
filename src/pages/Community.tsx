@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Users, Plus, MessageCircle, Target, Flame, MessageSquare, Sparkles } from "lucide-react";
+import { Trophy, Users, Plus, MessageCircle, Target, Flame, MessageSquare, Sparkles, Hand } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,12 @@ import ChallengeLeaderboard from "@/components/challenges/ChallengeLeaderboard";
 import GlobalRanking from "@/components/community/GlobalRanking";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { ConnectionsTab } from "@/components/social/ConnectionsTab";
+import IntroductionsTab from "@/components/community/IntroductionsTab";
 import { Challenge } from "@/types/challenges";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Community = () => {
-  const [activeTab, setActiveTab] = useState("feed");
+  const [activeTab, setActiveTab] = useState("introductions");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -98,7 +99,11 @@ const Community = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6 bg-muted">
+          <TabsList className="grid w-full grid-cols-6 mb-6 bg-muted">
+            <TabsTrigger value="introductions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Hand className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Apresente-se</span>
+            </TabsTrigger>
             <TabsTrigger value="feed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <MessageSquare className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Feed</span>
@@ -120,6 +125,11 @@ const Community = () => {
               <span className="hidden sm:inline">Grupos</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Introductions Tab */}
+          <TabsContent value="introductions" className="animate-fade-in">
+            <IntroductionsTab />
+          </TabsContent>
 
           {/* Feed Tab */}
           <TabsContent value="feed" className="animate-fade-in">
