@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Users, ArrowRight, Clock, Star, Sparkles } from "lucide-react";
+import { Users, ArrowRight, Clock, Star, Sparkles, Crown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Group {
   id: string;
@@ -10,10 +10,10 @@ interface Group {
   description: string;
   category: string;
   members: number;
-  gradient: string;
   emoji: string;
   isJoined: boolean;
   comingSoon?: boolean;
+  accent: string;
 }
 
 const mockGroups: Group[] = [
@@ -23,9 +23,9 @@ const mockGroups: Group[] = [
     description: "Aprenda a organizar suas finanças, investir com segurança e construir uma vida financeira equilibrada.",
     category: "Finanças",
     members: 697,
-    gradient: "from-pink-500 to-purple-600",
     emoji: "💰",
     isJoined: true,
+    accent: "hsl(var(--primary))",
   },
   {
     id: "2",
@@ -33,9 +33,9 @@ const mockGroups: Group[] = [
     description: "Compartilhe suas leituras favoritas, discuta livros sobre finanças, desenvolvimento pessoal e histórias inspiradoras.",
     category: "Cultura",
     members: 260,
-    gradient: "from-violet-500 to-indigo-600",
     emoji: "📚",
     isJoined: true,
+    accent: "hsl(var(--secondary))",
   },
   {
     id: "3",
@@ -43,10 +43,10 @@ const mockGroups: Group[] = [
     description: "Seu espaço para brilhar! Compartilhe seus projetos, serviços e empreendimentos. Faça networking e conecte-se.",
     category: "Networking",
     members: 0,
-    gradient: "from-rose-400 to-pink-600",
     emoji: "💼",
     isJoined: false,
     comingSoon: true,
+    accent: "hsl(var(--accent))",
   },
   {
     id: "4",
@@ -54,10 +54,10 @@ const mockGroups: Group[] = [
     description: "Não precisa mais se sentir sozinha nessa jornada! Aprenda estratégias para alavancar seu negócio e faça conexões.",
     category: "Empreendedorismo",
     members: 0,
-    gradient: "from-amber-400 to-orange-500",
     emoji: "🚀",
     isJoined: false,
     comingSoon: true,
+    accent: "hsl(var(--warning))",
   },
   {
     id: "5",
@@ -65,9 +65,9 @@ const mockGroups: Group[] = [
     description: "Troque experiências sobre saúde mental, rotinas de autocuidado e hábitos saudáveis com outras mulheres.",
     category: "Saúde",
     members: 183,
-    gradient: "from-emerald-400 to-teal-600",
     emoji: "🧘‍♀️",
     isJoined: false,
+    accent: "hsl(var(--success))",
   },
   {
     id: "6",
@@ -75,63 +75,90 @@ const mockGroups: Group[] = [
     description: "Defina metas, compartilhe conquistas e mantenha-se motivada com apoio da comunidade.",
     category: "Produtividade",
     members: 312,
-    gradient: "from-blue-400 to-cyan-600",
     emoji: "🎯",
     isJoined: false,
+    accent: "hsl(var(--ring))",
   },
 ];
 
-const GroupCard = ({ group }: { group: Group }) => {
+const GroupCard = ({ group, index }: { group: Group; index: number }) => {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col transition-shadow hover:shadow-lg">
-      {/* Gradient Header */}
-      <div className={`relative h-28 bg-gradient-to-br ${group.gradient} p-4 flex flex-col justify-between`}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge className="bg-white/20 text-white border-0 backdrop-blur-sm text-xs">
-            {group.category}
-          </Badge>
-          {group.comingSoon && (
-            <Badge className="bg-accent text-accent-foreground border-0 text-xs">
-              <Clock className="w-3 h-3 mr-1" />
-              Em Breve
-            </Badge>
-          )}
-        </div>
-        <h3 className="text-lg font-bold text-white drop-shadow-sm leading-tight">
-          {group.emoji} {group.name}
-        </h3>
-      </div>
+    <div
+      className="group relative bg-card rounded-2xl border border-border overflow-hidden flex flex-col transition-all duration-500 hover:shadow-xl hover:-translate-y-1 animate-fade-in"
+      style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Accent bar */}
+      <div
+        className="h-1.5 w-full transition-all duration-500"
+        style={{
+          background: group.accent,
+          opacity: hovered ? 1 : 0.6,
+        }}
+      />
 
       {/* Content */}
-      <div className="p-4 flex-1 flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground line-clamp-3 flex-1">
+      <div className="p-5 flex-1 flex flex-col gap-3">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className="text-3xl transition-transform duration-500 inline-block"
+              style={{ transform: hovered ? "scale(1.15) rotate(-5deg)" : "scale(1) rotate(0deg)" }}
+            >
+              {group.emoji}
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-bold text-foreground text-base leading-tight truncate">
+                {group.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="text-[10px] px-2 py-0 font-medium">
+                  {group.category}
+                </Badge>
+                {group.comingSoon && (
+                  <Badge variant="outline" className="text-[10px] px-2 py-0 font-medium gap-1 text-muted-foreground">
+                    <Clock className="w-2.5 h-2.5" />
+                    Em Breve
+                  </Badge>
+                )}
+                {group.isJoined && (
+                  <Crown className="w-3.5 h-3.5 text-primary" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
           {group.description}
         </p>
 
-        {!group.comingSoon && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Users className="w-3.5 h-3.5" />
-            <span>{group.members} membros</span>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="mt-auto pt-2 flex items-center justify-between gap-3">
+          {!group.comingSoon && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              <span className="font-medium">{group.members}</span>
+              <span>membros</span>
+              {group.members > 500 && (
+                <TrendingUp className="w-3 h-3 text-success ml-1" />
+              )}
+            </div>
+          )}
 
-        {/* Actions */}
-        <div className="flex gap-2 mt-auto pt-1">
           {group.comingSoon ? (
-            <p className="text-sm text-muted-foreground italic">
-              Este grupo estará disponível em breve! 🎉
-            </p>
+            <span className="text-xs text-muted-foreground italic ml-auto">Disponível em breve 🎉</span>
           ) : group.isJoined ? (
-            <>
-              <Button variant="outline" size="sm" className="flex-1 text-xs">
-                Participando
-              </Button>
-              <Button size="sm" className="flex-1 text-xs gap-1">
-                Ver Grupo <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </>
+            <Button size="sm" variant="outline" className="ml-auto text-xs gap-1.5 rounded-full px-4 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors duration-300">
+              Ver Grupo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </Button>
           ) : (
-            <Button size="sm" className="w-full text-xs gap-1">
+            <Button size="sm" className="ml-auto text-xs gap-1.5 rounded-full px-4 transition-all duration-300">
               <Sparkles className="w-3.5 h-3.5" />
               Participar
             </Button>
@@ -163,35 +190,43 @@ const GroupsTab = () => {
   const filteredGroups = getFilteredGroups();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Sub-tabs */}
       <Tabs value={subTab} onValueChange={setSubTab}>
-        <TabsList className="bg-muted/50 w-full sm:w-auto">
-          <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Star className="w-3.5 h-3.5 sm:mr-1" />
+        <TabsList className="bg-muted/50 w-full sm:w-auto rounded-full p-1">
+          <TabsTrigger value="all" className="text-xs sm:text-sm rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Star className="w-3.5 h-3.5 sm:mr-1.5" />
             <span>Todos</span>
+            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 hidden sm:inline-flex">
+              {mockGroups.length}
+            </Badge>
           </TabsTrigger>
-          <TabsTrigger value="joined" className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Users className="w-3.5 h-3.5 sm:mr-1" />
+          <TabsTrigger value="joined" className="text-xs sm:text-sm rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Crown className="w-3.5 h-3.5 sm:mr-1.5" />
             <span>Meus Grupos</span>
+            {joinedGroups.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 hidden sm:inline-flex">
+                {joinedGroups.length}
+              </Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="discover" className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Sparkles className="w-3.5 h-3.5 sm:mr-1" />
+          <TabsTrigger value="discover" className="text-xs sm:text-sm rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Sparkles className="w-3.5 h-3.5 sm:mr-1.5" />
             <span>Descobrir</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredGroups.map((group) => (
-          <GroupCard key={group.id} group={group} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {filteredGroups.map((group, i) => (
+          <GroupCard key={group.id} group={group} index={i} />
         ))}
       </div>
 
       {filteredGroups.length === 0 && (
-        <div className="text-center py-12 bg-card rounded-xl border border-border">
-          <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+        <div className="text-center py-16 bg-card rounded-2xl border border-border animate-fade-in">
+          <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
           <h3 className="font-semibold text-foreground mb-1">Nenhum grupo encontrado</h3>
           <p className="text-sm text-muted-foreground">Explore outros grupos disponíveis!</p>
         </div>
