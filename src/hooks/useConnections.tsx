@@ -36,7 +36,7 @@ export const useConnections = () => {
   const [loading, setLoading] = useState(true);
   const [currentFilter, setCurrentFilter] = useState<ConnectionType>("friendship"); // kept for API compat
 
-  // Fetch profiles to discover (excluding already interacted)
+  // Fetch all profiles except self
   const fetchDiscoverProfiles = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -45,26 +45,11 @@ export const useConnections = () => {
 
     setLoading(true);
     try {
-      // Get IDs of users already interacted with
-      const { data: interactions } = await supabase
-        .from("connections")
-        .select("target_user_id")
-        .eq("user_id", user.id);
-
-      const interactedIds = interactions?.map(i => i.target_user_id) || [];
-      interactedIds.push(user.id); // Exclude self
-
-      // Get profiles not yet interacted with
-      let query = supabase
+      const { data: profiles, error } = await supabase
         .from("profiles")
         .select("user_id, display_name, avatar_url, bio, interests")
-        .limit(20);
-
-      if (interactedIds.length > 0) {
-        query = query.not("user_id", "in", `(${interactedIds.join(",")})`);
-      }
-
-      const { data: profiles, error } = await query;
+        .neq("user_id", user.id)
+        .limit(50);
 
       if (error) throw error;
 
