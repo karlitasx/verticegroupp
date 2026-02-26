@@ -99,29 +99,29 @@ const Community = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-6 bg-muted">
-            <TabsTrigger value="introductions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Hand className="w-4 h-4 mr-1" />
+          <TabsList className="flex w-full overflow-x-auto no-scrollbar mb-6 bg-muted gap-0">
+            <TabsTrigger value="introductions" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <Hand className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Apresente-se</span>
             </TabsTrigger>
-            <TabsTrigger value="feed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MessageSquare className="w-4 h-4 mr-1" />
+            <TabsTrigger value="feed" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <MessageSquare className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Feed</span>
             </TabsTrigger>
-            <TabsTrigger value="connections" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Sparkles className="w-4 h-4 mr-1" />
+            <TabsTrigger value="connections" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <Sparkles className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Conexões</span>
             </TabsTrigger>
-            <TabsTrigger value="challenges" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Target className="w-4 h-4 mr-1" />
+            <TabsTrigger value="challenges" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <Target className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Desafios</span>
             </TabsTrigger>
-            <TabsTrigger value="ranking" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Trophy className="w-4 h-4 mr-1" />
+            <TabsTrigger value="ranking" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <Trophy className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Ranking</span>
             </TabsTrigger>
-            <TabsTrigger value="groups" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Users className="w-4 h-4 mr-1" />
+            <TabsTrigger value="groups" className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm px-2.5 sm:px-4">
+              <Users className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Grupos</span>
             </TabsTrigger>
           </TabsList>
