@@ -185,28 +185,12 @@ export const useSupabasePosts = (filterByFollowing: boolean = false) => {
 
         // Award 2 points to the post owner (receber curtida) - only if not self-like
         if (post.user_id !== user.id) {
-          // Insert point_history for post owner
-          const { data: ownerStats } = await supabase
-            .from("user_stats")
-            .select("total_points")
-            .eq("user_id", post.user_id)
-            .single();
-
-          if (ownerStats) {
-            await supabase
-              .from("point_history")
-              .insert({
-                user_id: post.user_id,
-                action_type: "post_liked_received",
-                action_id: `received_${postId}_${user.id}`,
-                points: 2,
-              });
-
-            await supabase
-              .from("user_stats")
-              .update({ total_points: (ownerStats.total_points || 0) + 2 })
-              .eq("user_id", post.user_id);
-          }
+          await supabase.rpc("award_points_to_user", {
+            target_user_id: post.user_id,
+            p_action_type: "post_liked_received",
+            p_action_id: `received_${postId}_${user.id}`,
+            p_points: 2,
+          });
         }
       }
 
