@@ -18,6 +18,7 @@ import GlobalRanking from "@/components/community/GlobalRanking";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { ConnectionsTab } from "@/components/social/ConnectionsTab";
 import IntroductionsTab from "@/components/community/IntroductionsTab";
+import GroupsTab from "@/components/community/GroupsTab";
 import { Challenge } from "@/types/challenges";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -241,76 +242,8 @@ const Community = () => {
           </TabsContent>
 
           {/* Groups Tab */}
-          <TabsContent value="groups" className="space-y-6 animate-fade-in">
-            <div className="flex justify-end">
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Criar Grupo
-              </Button>
-            </div>
-
-            {groups.map((group) => (
-              <div key={group.id} className="bg-card rounded-xl border border-border p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-2xl">
-                      {group.emoji}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">{group.name}</h3>
-                      <p className="text-sm text-muted-foreground">{group.members.length} membros</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Chat
-                  </Button>
-                </div>
-
-                {/* Financial Goal */}
-                {group.financialGoal && (
-                  <div className="p-4 rounded-xl bg-muted/50">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Meta do Grupo</span>
-                      <span className="font-medium text-foreground">
-                        R$ {group.financialCurrent?.toLocaleString()} / R$ {group.financialGoal.toLocaleString()}
-                      </span>
-                    </div>
-                    <Progress value={(group.financialCurrent || 0) / group.financialGoal * 100} className="h-3" />
-                  </div>
-                )}
-
-                {/* Active Challenge */}
-                {group.challenges[0] && (
-                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Target className="w-4 h-4 text-primary" />
-                      <span className="font-semibold text-sm text-foreground">Desafio Ativo</span>
-                    </div>
-                    <p className="font-medium text-foreground">{group.challenges[0].name}</p>
-                    <Progress 
-                      value={group.challenges[0].currentValue / group.challenges[0].targetValue * 100} 
-                      className="h-2 mt-2" 
-                    />
-                  </div>
-                )}
-
-                {/* Recent Activity */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-muted-foreground">Atividade Recente</h4>
-                  {group.activities.slice(0, 3).map((activity) => (
-                    <div key={activity.id} className="flex items-center gap-3 text-sm">
-                      <span className="text-lg">{activity.memberAvatar}</span>
-                      <span className="flex-1">
-                        <span className="font-medium text-foreground">{activity.memberName}</span>{" "}
-                        <span className="text-muted-foreground">{activity.description}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground">{formatTimeAgo(activity.timestamp)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <TabsContent value="groups" className="animate-fade-in">
+            <GroupsTab />
           </TabsContent>
         </Tabs>
       </div>
