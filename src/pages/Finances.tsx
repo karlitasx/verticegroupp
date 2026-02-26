@@ -11,6 +11,7 @@ import SavingsGoal from "@/components/finances/SavingsGoal";
 import WishlistTab from "@/components/finances/WishlistTab";
 import MetasKanban from "@/components/finances/MetasKanban";
 import OrganizationTab from "@/components/finances/OrganizationTab";
+import EmergencyFundCalculator from "@/components/finances/EmergencyFundCalculator";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -223,6 +224,7 @@ const Finances = () => {
                       budgetLimit={4000}
                     />
                   </div>
+                  <EmergencyFundCalculator />
                 </div>
                 <div className="xl:col-span-1">
                   <TransactionsList
