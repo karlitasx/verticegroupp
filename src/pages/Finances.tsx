@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, DollarSign, Star, Wallet, ArrowLeft, Building2, User } from "lucide-react";
+import { Plus, DollarSign, Star, Wallet, ArrowLeft, Building2, User, LayoutGrid, BarChart3, FileText, Target, CreditCard, FolderKanban } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SummaryCards from "@/components/finances/SummaryCards";
 import FinanceBarChart from "@/components/finances/FinanceBarChart";
@@ -9,12 +9,22 @@ import AddTransactionModal from "@/components/finances/AddTransactionModal";
 import FinanceFilters from "@/components/finances/FinanceFilters";
 import SavingsGoal from "@/components/finances/SavingsGoal";
 import WishlistTab from "@/components/finances/WishlistTab";
+import MetasKanban from "@/components/finances/MetasKanban";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSupabaseFinances } from "@/hooks/useSupabaseFinances";
+
+const financeTabs = [
+  { value: "overview", label: "Visão Geral", icon: LayoutGrid },
+  { value: "transactions", label: "Transações", icon: FileText },
+  { value: "investments", label: "Investimentos", icon: BarChart3 },
+  { value: "goals", label: "Metas", icon: Target },
+  { value: "debts", label: "Dívidas", icon: CreditCard },
+  { value: "organization", label: "Organização", icon: FolderKanban },
+];
 
 const Finances = () => {
   const [financeType, setFinanceType] = useState<FinanceType | null>(null);
@@ -102,8 +112,8 @@ const Finances = () => {
               <Skeleton className="h-4 w-48" />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
               <Skeleton key={i} className="h-32 rounded-2xl" />
             ))}
           </div>
@@ -139,7 +149,7 @@ const Finances = () => {
           </div>
         </div>
 
-        {activeTab === "overview" && (
+        {(activeTab === "overview" || activeTab === "transactions") && (
           <Button
             onClick={() => setIsModalOpen(true)}
             className="btn-gradient gap-2"
@@ -150,26 +160,29 @@ const Finances = () => {
         )}
       </div>
 
+      {/* Summary Cards - always visible */}
+      <SummaryCards balance={stats.balance} income={stats.income} expenses={stats.expenses} />
+
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-muted/50">
-          <TabsTrigger
-            value="overview"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <DollarSign className="w-4 h-4 mr-2" />
-            Visão Geral
-          </TabsTrigger>
-          <TabsTrigger
-            value="wishlist"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <Star className="w-4 h-4 mr-2" />
-            Meus Objetivos
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+        <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto flex-wrap gap-0.5">
+          {financeTabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg gap-1.5 text-sm px-3 py-2"
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6 animate-fade-in">
+        {/* Visão Geral */}
+        <TabsContent value="overview" className="space-y-6 animate-fade-in mt-6">
           {transactions.length === 0 ? (
             <EmptyState
               icon={Wallet}
@@ -186,7 +199,6 @@ const Finances = () => {
             />
           ) : (
             <>
-              <SummaryCards balance={stats.balance} income={stats.income} expenses={stats.expenses} />
               <FinanceFilters
                 selectedPeriod={selectedPeriod}
                 selectedType={selectedType}
@@ -223,7 +235,40 @@ const Finances = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="wishlist" className="animate-fade-in">
+        {/* Transações */}
+        <TabsContent value="transactions" className="animate-fade-in mt-6">
+          <TransactionsList
+            transactions={filteredTransactions.map(t => ({ ...t, date: t.date }))}
+            onDelete={handleDeleteTransaction}
+            categoryFilter={selectedCategory}
+          />
+        </TabsContent>
+
+        {/* Investimentos */}
+        <TabsContent value="investments" className="animate-fade-in mt-6">
+          <EmptyState
+            icon={BarChart3}
+            title="Investimentos em breve"
+            description="Acompanhe seus investimentos, rendimentos e carteira de ativos. Disponível em breve!"
+          />
+        </TabsContent>
+
+        {/* Metas */}
+        <TabsContent value="goals" className="animate-fade-in mt-6">
+          <MetasKanban />
+        </TabsContent>
+
+        {/* Dívidas */}
+        <TabsContent value="debts" className="animate-fade-in mt-6">
+          <EmptyState
+            icon={CreditCard}
+            title="Controle de dívidas em breve"
+            description="Organize suas dívidas, parcelas e acompanhe sua quitação. Disponível em breve!"
+          />
+        </TabsContent>
+
+        {/* Organização */}
+        <TabsContent value="organization" className="animate-fade-in mt-6">
           <WishlistTab onSavingsTransaction={handleSavingsTransaction} />
         </TabsContent>
       </Tabs>
