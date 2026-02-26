@@ -24,7 +24,7 @@ const PodiumCard = ({
       bg: "bg-gradient-to-br from-yellow-400 to-amber-500",
       podiumHeight: "h-24 sm:h-28",
       podiumBg: "bg-yellow-500/20",
-      icon: <Crown className="w-6 h-6 text-yellow-400 mb-1 animate-bounce" />,
+      icon: <Crown className="w-6 h-6 text-yellow-400 mb-1 animate-pulse" style={{ animationDuration: "1.5s" }} />,
       medalColor: "text-yellow-400",
       medalSize: "w-7 h-7 sm:w-8 sm:h-8",
       nameClass: "font-bold text-sm sm:text-base",
@@ -193,11 +193,11 @@ const GlobalRanking = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,hsl(var(--accent)/0.3),transparent_70%)]" />
         <div className="relative z-10 space-y-3">
           <div className="flex items-center justify-center gap-2">
-            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground animate-bounce" style={{ animationDuration: "2s" }} />
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary-foreground">
               Top 20
             </h2>
-            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground animate-bounce" style={{ animationDuration: "2s", animationDelay: "0.3s" }} />
           </div>
           <p className="text-primary-foreground/80 text-xs sm:text-sm">
             Os membros mais engajados da comunidade
