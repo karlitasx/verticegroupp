@@ -7,6 +7,7 @@ export interface Introduction {
   id: string;
   user_id: string;
   content: string;
+  goals: string | null;
   created_at: string;
   updated_at: string;
   profile?: {
@@ -69,21 +70,21 @@ export const useIntroductions = () => {
     fetchIntroductions();
   }, [fetchIntroductions]);
 
-  const createOrUpdateIntroduction = async (content: string) => {
+  const createOrUpdateIntroduction = async (content: string, goals?: string) => {
     if (!user) return;
 
     try {
       if (myIntroduction) {
         const { error } = await (supabase as any)
           .from("introductions")
-          .update({ content, updated_at: new Date().toISOString() })
+          .update({ content, goals: goals || null, updated_at: new Date().toISOString() })
           .eq("id", myIntroduction.id);
         if (error) throw error;
         toast({ title: "Apresentação atualizada! ✨" });
       } else {
         const { error } = await (supabase as any)
           .from("introductions")
-          .insert({ user_id: user.id, content });
+          .insert({ user_id: user.id, content, goals: goals || null });
         if (error) throw error;
         toast({ title: "Apresentação criada! 🎉" });
       }
