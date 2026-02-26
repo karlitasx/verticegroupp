@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, UserPlus, Loader2, Sparkles } from "lucide-react";
+import { Users, UserPlus, UserCheck, Loader2, Sparkles } from "lucide-react";
 import { useConnections, UserProfile } from "@/hooks/useConnections";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export const ConnectionsTab = () => {
 
   const [activeTab, setActiveTab] = useState<"discover" | "matches">("discover");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
 
   const getInitials = (name: string) => {
     return name
@@ -30,70 +31,92 @@ export const ConnectionsTab = () => {
 
   const handleConnect = async (userId: string) => {
     setProcessingId(userId);
-    await connect(userId);
+    const success = await connect(userId);
+    if (success) {
+      setConnectedIds(prev => new Set(prev).add(userId));
+    }
     setProcessingId(null);
   };
 
-  const ProfileCard = ({ profile }: { profile: UserProfile }) => (
-    <Card className="bg-card border-border overflow-hidden">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-center gap-3">
-          <Link to={`/user/${profile.user_id}`}>
-            <Avatar className="w-14 h-14 border-2 border-primary/20 hover:scale-105 transition-transform">
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary/20 text-primary text-lg">
-                {getInitials(profile.display_name || "U")}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+  // Check if user is already a match
+  const isMatched = (userId: string) => {
+    return matches.some(m => m.user.user_id === userId);
+  };
 
-          <div className="flex-1 min-w-0">
+  const isConnected = (userId: string) => {
+    return connectedIds.has(userId) || isMatched(userId);
+  };
+
+  const ProfileCard = ({ profile }: { profile: UserProfile }) => {
+    const connected = isConnected(profile.user_id);
+
+    return (
+      <Card className="bg-card border-border overflow-hidden">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-3">
             <Link to={`/user/${profile.user_id}`}>
-              <h3 className="font-semibold text-foreground truncate hover:text-primary transition-colors">
-                {profile.display_name || "Usuário"}
-              </h3>
+              <Avatar className="w-14 h-14 border-2 border-primary/20 hover:scale-105 transition-transform">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/20 text-primary text-lg">
+                  {getInitials(profile.display_name || "U")}
+                </AvatarFallback>
+              </Avatar>
             </Link>
 
-            {profile.bio && (
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                {profile.bio}
-              </p>
-            )}
-          </div>
+            <div className="flex-1 min-w-0">
+              <Link to={`/user/${profile.user_id}`}>
+                <h3 className="font-semibold text-foreground truncate hover:text-primary transition-colors">
+                  {profile.display_name || "Usuário"}
+                </h3>
+              </Link>
 
-          <Button
-            size="sm"
-            onClick={() => handleConnect(profile.user_id)}
-            disabled={processingId === profile.user_id}
-            className="shrink-0 gap-1.5"
-          >
-            {processingId === profile.user_id ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              {profile.bio && (
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                  {profile.bio}
+                </p>
+              )}
+            </div>
+
+            {connected ? (
+              <Button size="sm" variant="secondary" disabled className="shrink-0 gap-1.5">
+                <UserCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Conectado</span>
+              </Button>
             ) : (
-              <>
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">Conectar</span>
-              </>
+              <Button
+                size="sm"
+                onClick={() => handleConnect(profile.user_id)}
+                disabled={processingId === profile.user_id}
+                className="shrink-0 gap-1.5"
+              >
+                {processingId === profile.user_id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Conectar</span>
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
-        </div>
-
-        {profile.interests && profile.interests.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3">
-            {profile.interests.slice(0, 4).map((interest, idx) => (
-              <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs">
-                {interest}
-              </Badge>
-            ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-3">
+              {profile.interests.slice(0, 4).map((interest, idx) => (
+                <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs">
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-4">
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "discover" | "matches")}>
         <TabsList className="w-full bg-card border border-border">
           <TabsTrigger value="discover" className="flex-1">
