@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePoints } from "@/hooks/usePoints";
 import { toast } from "sonner";
 
 export interface Comment {
@@ -17,6 +18,7 @@ export interface Comment {
 
 export const useComments = (postId: string) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -90,6 +92,9 @@ export const useComments = (postId: string) => {
 
       if (error) throw error;
 
+      // Award 5 points for commenting
+      await awardPoints("comment_create", data.id);
+
       // Fetch author info
       const { data: profile } = await supabase
         .from("profiles")
@@ -103,7 +108,7 @@ export const useComments = (postId: string) => {
       };
 
       setComments(prev => [...prev, newComment]);
-      toast.success("Comentário adicionado!");
+      toast.success("Comentário adicionado! +5 pontos 🎉");
       return true;
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -112,7 +117,7 @@ export const useComments = (postId: string) => {
     } finally {
       setSubmitting(false);
     }
-  }, [user, postId]);
+  }, [user, postId, awardPoints]);
 
   const deleteComment = useCallback(async (commentId: string) => {
     if (!user) return false;
