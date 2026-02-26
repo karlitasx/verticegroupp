@@ -1,28 +1,19 @@
 import { useState } from "react";
-import { Users, Briefcase, Sparkles, X, Check, Loader2 } from "lucide-react";
+import { Users, UserPlus, Loader2, Sparkles } from "lucide-react";
 import { useConnections, UserProfile } from "@/hooks/useConnections";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-
-const CONNECTION_TYPES = [
-  { value: "friendship", label: "Amizade", icon: Users, color: "text-pink-500" },
-  { value: "work", label: "Trabalho", icon: Briefcase, color: "text-blue-500" },
-  { value: "networking", label: "Networking", icon: Sparkles, color: "text-purple-500" },
-] as const;
+import { Link } from "react-router-dom";
 
 export const ConnectionsTab = () => {
   const {
     discoverProfiles,
     matches,
     loading,
-    currentFilter,
-    setCurrentFilter,
     connect,
-    skip,
   } = useConnections();
 
   const [activeTab, setActiveTab] = useState<"discover" | "matches">("discover");
@@ -39,98 +30,69 @@ export const ConnectionsTab = () => {
 
   const handleConnect = async (userId: string) => {
     setProcessingId(userId);
-    await connect(userId, currentFilter);
-    setProcessingId(null);
-  };
-
-  const handleSkip = async (userId: string) => {
-    setProcessingId(userId);
-    await skip(userId);
+    await connect(userId);
     setProcessingId(null);
   };
 
   const ProfileCard = ({ profile }: { profile: UserProfile }) => (
     <Card className="bg-card border-border overflow-hidden">
-      <CardContent className="p-6 text-center">
-        <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-primary/20">
-          <AvatarImage src={profile.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/20 text-primary text-2xl">
-            {getInitials(profile.display_name || "U")}
-          </AvatarFallback>
-        </Avatar>
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-center gap-3">
+          <Link to={`/user/${profile.user_id}`}>
+            <Avatar className="w-14 h-14 border-2 border-primary/20 hover:scale-105 transition-transform">
+              <AvatarImage src={profile.avatar_url || undefined} />
+              <AvatarFallback className="bg-primary/20 text-primary text-lg">
+                {getInitials(profile.display_name || "U")}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
 
-        <h3 className="text-lg font-semibold text-foreground mb-1">
-          {profile.display_name || "Usuário"}
-        </h3>
+          <div className="flex-1 min-w-0">
+            <Link to={`/user/${profile.user_id}`}>
+              <h3 className="font-semibold text-foreground truncate hover:text-primary transition-colors">
+                {profile.display_name || "Usuário"}
+              </h3>
+            </Link>
 
-        {profile.bio && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            {profile.bio}
-          </p>
-        )}
+            {profile.bio && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                {profile.bio}
+              </p>
+            )}
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => handleConnect(profile.user_id)}
+            disabled={processingId === profile.user_id}
+            className="shrink-0 gap-1.5"
+          >
+            {processingId === profile.user_id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">Conectar</span>
+              </>
+            )}
+          </Button>
+        </div>
 
         {profile.interests && profile.interests.length > 0 && (
-          <div className="flex flex-wrap gap-1 justify-center mb-4">
+          <div className="flex flex-wrap gap-1 mt-3">
             {profile.interests.slice(0, 4).map((interest, idx) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
+              <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs">
                 {interest}
               </Badge>
             ))}
           </div>
         )}
-
-        <div className="flex gap-3 justify-center">
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => handleSkip(profile.user_id)}
-            disabled={processingId === profile.user_id}
-            className="w-14 h-14 rounded-full p-0 border-2 hover:border-destructive hover:bg-destructive/10"
-          >
-            {processingId === profile.user_id ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <X className="w-6 h-6 text-muted-foreground" />
-            )}
-          </Button>
-          <Button
-            size="lg"
-            onClick={() => handleConnect(profile.user_id)}
-            disabled={processingId === profile.user_id}
-            className="w-14 h-14 rounded-full p-0 bg-primary hover:bg-primary/90"
-          >
-            {processingId === profile.user_id ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <Check className="w-6 h-6" />
-            )}
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
 
   return (
-    <div className="space-y-6">
-      {/* Connection Type Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {CONNECTION_TYPES.map(({ value, label, icon: Icon, color }) => (
-          <Button
-            key={value}
-            variant={currentFilter === value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCurrentFilter(value)}
-            className={cn(
-              "gap-2 whitespace-nowrap",
-              currentFilter === value && "bg-primary"
-            )}
-          >
-            <Icon className={cn("w-4 h-4", currentFilter !== value && color)} />
-            {label}
-          </Button>
-        ))}
-      </div>
-
+    <div className="space-y-4">
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "discover" | "matches")}>
         <TabsList className="w-full bg-card border border-border">
@@ -158,7 +120,7 @@ export const ConnectionsTab = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-3">
               {discoverProfiles.map((profile) => (
                 <ProfileCard key={profile.user_id} profile={profile} />
               ))}
@@ -174,27 +136,33 @@ export const ConnectionsTab = () => {
                 Você ainda não tem conexões.
               </p>
               <p className="text-sm text-muted-foreground/70 mt-1">
-                Conecte-se com pessoas para criar matches!
+                Conecte-se com pessoas na aba Descobrir!
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-3">
               {matches.map((match) => (
                 <Card key={match.user.user_id} className="bg-card border-border">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <Avatar className="w-14 h-14 border-2 border-primary/30">
-                      <AvatarImage src={match.user.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/20 text-primary">
-                        {getInitials(match.user.display_name || "U")}
-                      </AvatarFallback>
-                    </Avatar>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <Link to={`/user/${match.user.user_id}`}>
+                      <Avatar className="w-12 h-12 border-2 border-primary/30 hover:scale-105 transition-transform">
+                        <AvatarImage src={match.user.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/20 text-primary">
+                          {getInitials(match.user.display_name || "U")}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-foreground truncate">
-                        {match.user.display_name || "Usuário"}
-                      </h4>
-                      <Badge variant="secondary" className="mt-1 text-xs">
-                        {CONNECTION_TYPES.find(t => t.value === match.connectionType)?.label || "Conexão"}
-                      </Badge>
+                      <Link to={`/user/${match.user.user_id}`}>
+                        <h4 className="font-medium text-foreground truncate hover:text-primary transition-colors">
+                          {match.user.display_name || "Usuário"}
+                        </h4>
+                      </Link>
+                      {match.user.bio && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {match.user.bio}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

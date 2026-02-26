@@ -34,7 +34,7 @@ export const useConnections = () => {
   const [discoverProfiles, setDiscoverProfiles] = useState<UserProfile[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentFilter, setCurrentFilter] = useState<ConnectionType>("friendship");
+  const [currentFilter, setCurrentFilter] = useState<ConnectionType>("friendship"); // kept for API compat
 
   // Fetch profiles to discover (excluding already interacted)
   const fetchDiscoverProfiles = useCallback(async () => {
