@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Edit2, Clock, TrendingUp, RefreshCw, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ContentSkeleton } from "@/components/ui/content-skeleton";
@@ -22,18 +23,23 @@ const IntroductionsTab = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [content, setContent] = useState("");
+  const [goals, setGoals] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("recent");
 
   const handleOpenModal = () => {
     setContent(myIntroduction?.content || "");
+    setGoals(myIntroduction?.goals || "");
     setIsModalOpen(true);
   };
 
   const handleSubmit = async () => {
     if (!content.trim()) return;
-    await createOrUpdateIntroduction(content.trim());
+    await createOrUpdateIntroduction(content.trim(), goals.trim());
     setIsModalOpen(false);
   };
+
+  const profileName = user ? (introductions.find(i => i.user_id === user.id)?.profile?.display_name || "Usuário") : "Usuário";
+  const profileAvatar = user ? introductions.find(i => i.user_id === user.id)?.profile?.avatar_url : null;
 
   if (loading) {
     return <ContentSkeleton type="card" count={4} />;
@@ -141,33 +147,74 @@ const IntroductionsTab = () => {
               {myIntroduction ? "Editar sua apresentação" : "Faça sua apresentação"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
+          <div className="space-y-5 pt-2">
             <p className="text-sm text-muted-foreground">
-              Conte um pouco sobre você, seus objetivos e o que te trouxe até aqui!
+              Compartilhe um pouco sobre você e seus objetivos com a comunidade.
             </p>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Olá, meu nome é... Tenho X anos e meus objetivos são..."
-              className="min-h-[150px] bg-input border-border resize-none"
-              maxLength={1000}
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {content.length}/1000 caracteres
-              </span>
-              <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!content.trim()}
-                  className="btn-gradient"
-                >
-                  {myIntroduction ? "Salvar" : "Publicar"}
-                </Button>
+
+            {/* Live Preview */}
+            <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-9 w-9 border-2 border-primary/20">
+                  <AvatarImage src={profileAvatar || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                    {profileName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-semibold">Apresentação de {profileName}</p>
+                  <p className="text-xs text-muted-foreground">Agora</p>
+                </div>
               </div>
+              <div className="pl-12 space-y-1.5">
+                <p className="text-xs font-semibold">Sobre mim:</p>
+                <p className="text-xs text-muted-foreground">
+                  {content.trim() || "Conte um pouco sobre você..."}
+                </p>
+                <p className="text-xs font-semibold mt-2">Meus objetivos:</p>
+                <p className="text-xs text-muted-foreground">
+                  {goals.trim() || "Compartilhe seus objetivos..."}
+                </p>
+              </div>
+            </div>
+
+            {/* Sobre mim */}
+            <div className="space-y-2">
+              <Label>Sobre mim</Label>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Conte um pouco sobre você, seus interesses, profissão, hobbies..."
+                className="min-h-[120px] bg-input border-border resize-none"
+                maxLength={1000}
+              />
+              <span className="text-xs text-muted-foreground">{content.length}/1000 caracteres</span>
+            </div>
+
+            {/* Meus objetivos */}
+            <div className="space-y-2">
+              <Label>Meus objetivos</Label>
+              <Textarea
+                value={goals}
+                onChange={(e) => setGoals(e.target.value)}
+                placeholder="Quais são seus objetivos? O que você quer alcançar?"
+                className="min-h-[100px] bg-input border-border resize-none"
+                maxLength={1000}
+              />
+              <span className="text-xs text-muted-foreground">{goals.length}/1000 caracteres</span>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!content.trim()}
+                className="btn-gradient"
+              >
+                {myIntroduction ? "Salvar" : "Publicar"}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -216,13 +263,25 @@ const IntroductionCard = ({ introduction, isOwn, onNavigate }: IntroductionCardP
       </div>
 
       {/* Content */}
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-          Sobre mim:
-        </p>
-        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line line-clamp-5">
-          {introduction.content}
-        </p>
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Sobre mim:
+          </p>
+          <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line line-clamp-4">
+            {introduction.content}
+          </p>
+        </div>
+        {introduction.goals && (
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Meus objetivos:
+            </p>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line line-clamp-3">
+              {introduction.goals}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
