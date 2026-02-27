@@ -436,22 +436,31 @@ export type Database = {
         Row: {
           completed_at: string
           completed_date: string
+          difficulty: number | null
           habit_id: string
           id: string
+          mood: string | null
+          note: string | null
           user_id: string
         }
         Insert: {
           completed_at?: string
           completed_date?: string
+          difficulty?: number | null
           habit_id: string
           id?: string
+          mood?: string | null
+          note?: string | null
           user_id: string
         }
         Update: {
           completed_at?: string
           completed_date?: string
+          difficulty?: number | null
           habit_id?: string
           id?: string
+          mood?: string | null
+          note?: string | null
           user_id?: string
         }
         Relationships: [
@@ -471,8 +480,14 @@ export type Database = {
           category_color: string
           created_at: string
           emoji: string
+          frequency_days: string[] | null
+          frequency_interval_days: number | null
+          frequency_times_per_week: number | null
+          frequency_type: string
+          goal_days: number | null
           id: string
           is_active: boolean
+          motivation: string | null
           name: string
           reminder_time: string | null
           streak: number
@@ -485,8 +500,14 @@ export type Database = {
           category_color?: string
           created_at?: string
           emoji?: string
+          frequency_days?: string[] | null
+          frequency_interval_days?: number | null
+          frequency_times_per_week?: number | null
+          frequency_type?: string
+          goal_days?: number | null
           id?: string
           is_active?: boolean
+          motivation?: string | null
           name: string
           reminder_time?: string | null
           streak?: number
@@ -499,8 +520,14 @@ export type Database = {
           category_color?: string
           created_at?: string
           emoji?: string
+          frequency_days?: string[] | null
+          frequency_interval_days?: number | null
+          frequency_times_per_week?: number | null
+          frequency_type?: string
+          goal_days?: number | null
           id?: string
           is_active?: boolean
+          motivation?: string | null
           name?: string
           reminder_time?: string | null
           streak?: number
