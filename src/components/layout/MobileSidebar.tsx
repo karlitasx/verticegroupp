@@ -79,7 +79,7 @@ const MobileSidebar = ({ open, onOpenChange }: MobileSidebarProps) => {
       <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-background [&>button]:hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <span className="text-lg font-bold text-foreground">VidaFlow</span>
+          <span className="text-lg font-bold text-foreground">Vertice Group</span>
           <button
             onClick={() => onOpenChange(false)}
             className="p-1.5 rounded-md hover:bg-muted transition-colors"

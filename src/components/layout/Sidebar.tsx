@@ -1,45 +1,130 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { getDesktopNavItems } from "@/lib/navigation";
-import { usePreferences } from "@/contexts/PreferencesContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { toast } from "@/hooks/use-toast";
+import {
+  Home, User, Play, LogOut, HelpCircle, BookOpen, Calendar,
+  Users, Newspaper, Wallet, Sparkles,
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
-const navItems = getDesktopNavItems();
+const sections = [
+  {
+    titleKey: "Comece aqui!",
+    items: [
+      { icon: Play, label: "Primeiros Passos", href: "/" },
+      { icon: User, label: "Apresente-se", href: "/community" },
+      { icon: BookOpen, label: "Regras da Comunidade", href: "/community" },
+    ],
+  },
+  {
+    titleKey: "Navegue pela comunidade",
+    items: [
+      { icon: Home, label: "Feed", href: "/community" },
+      { icon: Users, label: "Grupos e Temas", href: "/community" },
+      { icon: Calendar, label: "Eventos", href: "/agenda" },
+      { icon: Newspaper, label: "Novidades", href: "/community" },
+    ],
+  },
+  {
+    titleKey: "Controle suas finanças",
+    items: [
+      { icon: Wallet, label: "Minhas Finanças", href: "/finances" },
+    ],
+  },
+];
 
 interface SidebarProps {
   activeItem?: string;
 }
 
 const Sidebar = ({ activeItem = "/" }: SidebarProps) => {
-  const { t } = usePreferences();
-  
-  return (
-    <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-20 lg:w-56 bg-sidebar border-r border-sidebar-border flex-col py-4 z-40">
-      <nav className="flex-1 px-2">
-        <ul className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = activeItem === item.href;
-            const Icon = item.icon;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, signOut } = useAuth();
+  const { profile } = useProfile();
 
-            return (
-              <li key={item.href}>
-                <a
-                  href={item.href}
+  const handleNavigate = (href: string) => {
+    navigate(href);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Até logo! 👋",
+      description: "Você saiu da sua conta",
+    });
+    navigate("/auth", { replace: true });
+  };
+
+  return (
+    <aside className="hidden md:flex fixed left-0 top-14 bottom-0 w-64 bg-background border-r border-border flex-col z-40">
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto py-2">
+        {sections.map((section, idx) => (
+          <div key={idx} className="px-3 mb-2">
+            <p className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-primary">
+              {section.titleKey}
+            </p>
+            {section.items.map((item) => {
+              const isActive = location.pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => handleNavigate(item.href)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
+                    "flex items-center gap-4 w-full px-3 py-3 rounded-lg text-left transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-foreground hover:bg-muted"
                   )}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-medium hidden lg:block">
-                    {t(item.labelKey)}
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                  <span className="text-[15px]">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border">
+        <button
+          onClick={() => handleNavigate("/profile")}
+          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted transition-colors"
+        >
+          <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+            <User className="w-4 h-4 text-primary-foreground" />
+          </div>
+          <div className="text-left min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {profile?.display_name || "Meu Perfil"}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email}
+            </p>
+          </div>
+        </button>
+
+        <Separator />
+
+        <div className="flex items-center px-4 py-3 gap-6">
+          <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <HelpCircle className="w-4 h-4" />
+            <span className="text-sm">Ajuda</span>
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm">Sair</span>
+          </button>
+        </div>
+      </div>
     </aside>
   );
 };
