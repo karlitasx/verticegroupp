@@ -13,6 +13,9 @@ const POINT_VALUES = {
   challenge_join: 15,
   challenge_complete: 50,
   follow: 2,
+  selfcare_checkin: 10,
+  selfcare_ritual: 5,
+  selfcare_pillar: 3,
 } as const;
 
 // Daily limits for each action type
@@ -26,6 +29,9 @@ const DAILY_LIMITS = {
   challenge_join: 2,
   challenge_complete: 5,
   follow: 10,
+  selfcare_checkin: 1,
+  selfcare_ritual: 3,
+  selfcare_pillar: 9,
 } as const;
 
 type ActionType = keyof typeof POINT_VALUES;
