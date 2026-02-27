@@ -8,7 +8,6 @@ import { toast } from "@/hooks/use-toast";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   Home,
-  DollarSign,
   User,
   Play,
   LogOut,
@@ -19,13 +18,12 @@ import {
   Users,
   Newspaper,
   Wallet,
+  Target,
+  Heart,
+  Award,
+  Trophy,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-
-interface MobileSidebarProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
 
 const sections = [
   {
@@ -46,12 +44,26 @@ const sections = [
     ],
   },
   {
+    titleKey: "Navegue pelo app",
+    items: [
+      { icon: Target, label: "Hábitos", href: "/habits" },
+      { icon: Heart, label: "Autocuidado", href: "/selfcare" },
+      { icon: Award, label: "Conquistas", href: "/achievements" },
+      { icon: Trophy, label: "Ranking", href: "/community" },
+    ],
+  },
+  {
     titleKey: "Controle suas finanças",
     items: [
       { icon: Wallet, label: "Minhas Finanças", href: "/finances" },
     ],
   },
 ];
+
+interface MobileSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
 const MobileSidebar = ({ open, onOpenChange }: MobileSidebarProps) => {
   const navigate = useNavigate();
