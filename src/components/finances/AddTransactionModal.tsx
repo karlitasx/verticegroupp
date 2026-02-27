@@ -13,10 +13,15 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { personalCategories, businessCategories, type FinanceCategory } from "@/lib/financeCategories";
+import {
+  personalIncomeCategories, personalExpenseCategories, investmentCategories,
+  businessCategories, type FinanceCategory,
+} from "@/lib/financeCategories";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+
+type TransactionType = "income" | "expense" | "investment";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -39,14 +44,29 @@ const AddTransactionModal = ({
   onAdd,
   financeType = "personal",
 }: AddTransactionModalProps) => {
-  const [type, setType] = useState<"income" | "expense">("expense");
+  const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [recurring, setRecurring] = useState(false);
 
-  const categories: FinanceCategory[] = financeType === "business" ? businessCategories : personalCategories;
+  const getCategoriesForType = (): FinanceCategory[] => {
+    if (financeType === "business") return businessCategories;
+    switch (type) {
+      case "income": return personalIncomeCategories;
+      case "expense": return personalExpenseCategories;
+      case "investment": return investmentCategories;
+      default: return personalExpenseCategories;
+    }
+  };
+
+  const categories = getCategoriesForType();
+
+  const handleTypeChange = (newType: TransactionType) => {
+    setType(newType);
+    setCategory("");
+  };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -61,7 +81,8 @@ const AddTransactionModal = ({
       description,
       category,
       amount: parseFloat(amount),
-      type,
+      // investments are stored as expenses in the DB
+      type: type === "investment" ? "expense" : type,
       date,
       recurring,
       finance_type: financeType,
@@ -84,38 +105,38 @@ const AddTransactionModal = ({
     });
   };
 
+  const typeButtons: { key: TransactionType; label: string; activeClass: string }[] = [
+    { key: "income", label: "Receita", activeClass: "bg-green-500/20 text-green-500 border border-green-500" },
+    { key: "expense", label: "Despesa", activeClass: "bg-destructive/20 text-destructive border border-destructive" },
+    { key: "investment", label: "Investimento", activeClass: "bg-primary/20 text-primary border border-primary" },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {financeType === "business" ? "Nova Transação Empresarial" : "Nova Transação"}
-          </DialogTitle>
+          <DialogTitle>Adicionar Transação</DialogTitle>
+          <p className="text-sm text-muted-foreground">Registre uma nova receita ou despesa</p>
         </DialogHeader>
 
-        <div className="space-y-5 pt-4">
+        <div className="space-y-5 pt-2">
           {/* Type Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setType("expense")}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                type === "expense"
-                  ? "bg-destructive/20 text-destructive border border-destructive"
-                  : "bg-muted hover:bg-muted/80"
-              }`}
-            >
-              Despesa
-            </button>
-            <button
-              onClick={() => setType("income")}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                type === "income"
-                  ? "bg-green-500/20 text-green-500 border border-green-500"
-                  : "bg-muted hover:bg-muted/80"
-              }`}
-            >
-              Receita
-            </button>
+          <div className="space-y-2">
+            <Label>Tipo</Label>
+            <div className="flex gap-2">
+              {typeButtons.map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => handleTypeChange(btn.key)}
+                  className={cn(
+                    "flex-1 py-3 rounded-xl font-medium transition-all text-sm",
+                    type === btn.key ? btn.activeClass : "bg-muted hover:bg-muted/80"
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Amount */}
@@ -136,16 +157,26 @@ const AddTransactionModal = ({
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={financeType === "business" ? "Ex: Pagamento fornecedor" : "Ex: Almoço no restaurante"}
+              placeholder={
+                type === "investment"
+                  ? "Ex: Aporte mensal Tesouro Selic"
+                  : financeType === "business"
+                  ? "Ex: Pagamento fornecedor"
+                  : "Ex: Almoço no restaurante"
+              }
             />
           </div>
 
-          {/* Category Grid */}
+          {/* Category Select */}
           <div className="space-y-2">
-            <Label>Categoria</Label>
+            <Label>
+              {type === "investment" ? "Tipo de Investimento *" : "Categoria *"}
+            </Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione uma categoria" />
+                <SelectValue placeholder={
+                  type === "investment" ? "Selecione o tipo de investimento" : "Selecione uma categoria"
+                } />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => {
