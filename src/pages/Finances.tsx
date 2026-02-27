@@ -224,7 +224,6 @@ const Finances = () => {
                       budgetLimit={4000}
                     />
                   </div>
-                  <EmergencyFundCalculator />
                 </div>
                 <div className="xl:col-span-1">
                   <TransactionsList
@@ -236,6 +235,9 @@ const Finances = () => {
               </div>
             </>
           )}
+
+          {/* Calculadora sempre visível */}
+          <EmergencyFundCalculator />
         </TabsContent>
 
         {/* Transações */}
