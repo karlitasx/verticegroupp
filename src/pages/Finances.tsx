@@ -14,6 +14,7 @@ import OrganizationTab from "@/components/finances/OrganizationTab";
 import EmergencyFundCalculator from "@/components/finances/EmergencyFundCalculator";
 import BudgetMethods from "@/components/finances/BudgetMethods";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
+import VeveAssistant from "@/components/finances/VeveAssistant";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -279,6 +280,8 @@ const Finances = () => {
         onAdd={handleAddTransaction}
         financeType={financeType}
       />
+
+      <VeveAssistant />
     </DashboardLayout>
   );
 };
