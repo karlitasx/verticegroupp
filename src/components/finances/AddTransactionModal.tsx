@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { personalCategories, businessCategories, type FinanceCategory } from "@/lib/financeCategories";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -140,28 +143,24 @@ const AddTransactionModal = ({
           {/* Category Grid */}
           <div className="space-y-2">
             <Label>Categoria</Label>
-            <div className="grid grid-cols-5 gap-2">
-              {categories.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <button
-                    key={cat.name}
-                    onClick={() => setCategory(cat.name)}
-                    className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-                      category === cat.name
-                        ? "ring-2 ring-primary bg-primary/10"
-                        : "bg-muted hover:bg-muted/80"
-                    }`}
-                    title={cat.name}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: cat.color }} />
-                  </button>
-                );
-              })}
-            </div>
-            {category && (
-              <p className="text-sm text-muted-foreground text-center">{category}</p>
-            )}
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <SelectItem key={cat.name} value={cat.name}>
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-4 h-4" style={{ color: cat.color }} />
+                        <span>{cat.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Date Picker */}
