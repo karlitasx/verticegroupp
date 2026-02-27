@@ -6,6 +6,7 @@ import {
   Heart, 
   Users, 
   User,
+  Shield,
   ChevronRight 
 } from "lucide-react";
 
@@ -68,7 +69,14 @@ const QuickNavigation = () => {
       label: "Autocuidado",
       description: "Cuide do seu bem-estar",
       gradient: "from-pink-500 to-rose-600",
-      path: "/habits",
+      path: "/selfcare",
+    },
+    {
+      icon: <Shield className="w-6 h-6 text-white" />,
+      label: "Reserva de Emergência",
+      description: "Calculadora financeira",
+      gradient: "from-violet-500 to-purple-600",
+      path: "/finances",
     },
     {
       icon: <Users className="w-6 h-6 text-white" />,
@@ -81,7 +89,7 @@ const QuickNavigation = () => {
       icon: <User className="w-6 h-6 text-white" />,
       label: "Perfil",
       description: "Suas configurações",
-      gradient: "from-violet-500 to-purple-600",
+      gradient: "from-slate-500 to-gray-600",
       path: "/profile",
     },
   ];
