@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Repeat } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
@@ -38,6 +39,18 @@ interface AddTransactionModalProps {
   }) => void;
 }
 
+const paymentMethods = [
+  "Dinheiro",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+  "Pix",
+  "Transferência Bancária",
+  "Boleto",
+];
+
+const frequencies = ["Mensal", "Semanal", "Quinzenal", "Anual"];
+const daysOfMonth = Array.from({ length: 31 }, (_, i) => `Dia ${i + 1}`);
+
 const AddTransactionModal = ({
   isOpen,
   onClose,
@@ -50,6 +63,13 @@ const AddTransactionModal = ({
   const [category, setCategory] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [recurring, setRecurring] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [notes, setNotes] = useState("");
+  // Recurrence settings
+  const [frequency, setFrequency] = useState("Mensal");
+  const [dayOfMonth, setDayOfMonth] = useState("Dia 1");
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const getCategoriesForType = (): FinanceCategory[] => {
     if (financeType === "business") return businessCategories;
@@ -81,19 +101,25 @@ const AddTransactionModal = ({
       description,
       category,
       amount: parseFloat(amount),
-      // investments are stored as expenses in the DB
       type: type === "investment" ? "expense" : type,
       date,
       recurring,
       finance_type: financeType,
     });
 
+    // Reset
     setAmount("");
     setDescription("");
     setCategory("");
     setDate(new Date());
     setRecurring(false);
     setType("expense");
+    setPaymentMethod("");
+    setNotes("");
+    setFrequency("Mensal");
+    setDayOfMonth("Dia 1");
+    setStartDate(new Date());
+    setEndDate(null);
     onClose();
   };
 
@@ -169,9 +195,7 @@ const AddTransactionModal = ({
 
           {/* Category Select */}
           <div className="space-y-2">
-            <Label>
-              {type === "investment" ? "Tipo de Investimento *" : "Categoria *"}
-            </Label>
+            <Label>{type === "investment" ? "Tipo de Investimento *" : "Categoria *"}</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={
@@ -194,49 +218,138 @@ const AddTransactionModal = ({
             </Select>
           </div>
 
-          {/* Date Picker */}
+          {/* Payment Method */}
           <div className="space-y-2">
-            <Label>Data</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd/MM/yyyy") : "Selecione uma data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => d && setDate(d)}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <Label>Forma de Pagamento</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione a forma de pagamento" />
+              </SelectTrigger>
+              <SelectContent>
+                {paymentMethods.map((method) => (
+                  <SelectItem key={method} value={method}>{method}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Recurring */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="recurring"
-              checked={recurring}
-              onCheckedChange={(checked) => setRecurring(checked as boolean)}
+          {/* Separator */}
+          <div className="border-t border-border" />
+
+          {/* Recurring Toggle */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+            <div className="flex items-center gap-3">
+              <Repeat className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium text-sm">Gasto fixo</p>
+                <p className="text-xs text-muted-foreground">Será gerada automaticamente</p>
+              </div>
+            </div>
+            <Switch checked={recurring} onCheckedChange={setRecurring} />
+          </div>
+
+          {/* Recurrence Settings */}
+          {recurring && (
+            <div className="rounded-xl border border-border p-4 space-y-4 animate-fade-in">
+              <p className="font-semibold text-sm">Configurações de Recorrência</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Frequência *</Label>
+                  <Select value={frequency} onValueChange={setFrequency}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {frequencies.map((f) => (
+                        <SelectItem key={f} value={f}>{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Dia do Mês *</Label>
+                  <Select value={dayOfMonth} onValueChange={setDayOfMonth}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {daysOfMonth.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Data de Início *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal text-sm h-10">
+                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {format(startDate, "dd/MM/yyyy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={startDate} onSelect={(d) => d && setStartDate(d)} initialFocus className="pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Data de Fim (opcional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal text-sm h-10", !endDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "dd/MM/yyyy") : "Sem fim"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={endDate ?? undefined} onSelect={(d) => setEndDate(d ?? null)} initialFocus className="pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Date (when not recurring) */}
+          {!recurring && (
+            <div className="space-y-2">
+              <Label>Data</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "dd/MM/yyyy") : "Selecione uma data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className="pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label>Descrição</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Informações adicionais (opcional)"
+              rows={3}
             />
-            <Label htmlFor="recurring" className="cursor-pointer">
-              Transação recorrente (mensal)
-            </Label>
           </div>
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button variant="ghost" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
             <Button
@@ -244,7 +357,7 @@ const AddTransactionModal = ({
               className="flex-1 btn-gradient"
               disabled={!amount || !description || !category}
             >
-              Adicionar
+              Salvar Transação
             </Button>
           </div>
         </div>
