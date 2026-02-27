@@ -38,14 +38,12 @@ const sections = [
     ],
   },
   {
-    titleKey: "Navegue pelo app",
+    titleKey: "Navegue pela comunidade",
     items: [
-      { icon: Home, label: "Dashboard", href: "/" },
-      { icon: Target, label: "Hábitos", href: "/habits" },
-      { icon: Calendar, label: "Agenda", href: "/agenda" },
-      { icon: Heart, label: "Autocuidado", href: "/selfcare" },
-      { icon: Award, label: "Conquistas", href: "/achievements" },
-      { icon: Trophy, label: "Comunidade", href: "/community" },
+      { icon: Home, label: "Feed", href: "/community" },
+      { icon: Trophy, label: "Grupos e Temas", href: "/community" },
+      { icon: Calendar, label: "Eventos", href: "/agenda" },
+      { icon: Award, label: "Novidades", href: "/community" },
     ],
   },
   {
