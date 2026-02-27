@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { toast } from "@/hooks/use-toast";
 import {
   Home, User, Play, LogOut, HelpCircle, BookOpen, Calendar,
-  Users, Newspaper, Wallet, Sparkles,
+  Users, Newspaper, Wallet, Target, Heart, Award, Trophy,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -25,6 +25,15 @@ const sections = [
       { icon: Users, label: "Grupos e Temas", href: "/community" },
       { icon: Calendar, label: "Eventos", href: "/agenda" },
       { icon: Newspaper, label: "Novidades", href: "/community" },
+    ],
+  },
+  {
+    titleKey: "Navegue pelo app",
+    items: [
+      { icon: Target, label: "Hábitos", href: "/habits" },
+      { icon: Heart, label: "Autocuidado", href: "/selfcare" },
+      { icon: Award, label: "Conquistas", href: "/achievements" },
+      { icon: Trophy, label: "Ranking", href: "/community" },
     ],
   },
   {
