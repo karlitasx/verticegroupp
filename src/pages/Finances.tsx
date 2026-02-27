@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, DollarSign, Star, Wallet, ArrowLeft, Building2, User, LayoutGrid, BarChart3, FileText, Target, CreditCard, FolderKanban } from "lucide-react";
+import { Plus, DollarSign, Star, Wallet, ArrowLeft, Building2, User, LayoutGrid, BarChart3, FileText, Target, CreditCard, FolderKanban, TrendingDown } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import SummaryCards from "@/components/finances/SummaryCards";
 import FinanceBarChart from "@/components/finances/FinanceBarChart";
@@ -15,6 +15,7 @@ import EmergencyFundCalculator from "@/components/finances/EmergencyFundCalculat
 import BudgetMethods from "@/components/finances/BudgetMethods";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import VeveAssistant from "@/components/finances/VeveAssistant";
+import ExpenseOverview from "@/components/finances/ExpenseOverview";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +24,7 @@ import { useSupabaseFinances } from "@/hooks/useSupabaseFinances";
 
 const financeTabs = [
   { value: "overview", label: "Visão Geral", icon: LayoutGrid },
+  { value: "expenses", label: "Saídas", icon: TrendingDown },
   { value: "transactions", label: "Transações", icon: FileText },
   { value: "investments", label: "Investimentos", icon: BarChart3 },
   { value: "goals", label: "Metas", icon: Target },
@@ -237,6 +239,14 @@ const Finances = () => {
               </div>
             </>
           )}
+        </TabsContent>
+
+        {/* Saídas */}
+        <TabsContent value="expenses" className="animate-fade-in mt-6">
+          <ExpenseOverview
+            transactions={transactions}
+            onAddExpense={() => setIsModalOpen(true)}
+          />
         </TabsContent>
 
         {/* Transações */}
