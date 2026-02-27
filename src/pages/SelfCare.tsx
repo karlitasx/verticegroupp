@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
-import { Heart, Sparkles, Brain, Palette, Activity, CheckCircle, TrendingUp, Smile, Meh, Frown, Laugh, Angry } from "lucide-react";
+import { Heart, Sparkles, Brain, Palette, Activity, CheckCircle, Leaf } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { useSelfCare } from "@/hooks/useSelfCare";
+import { usePoints } from "@/hooks/usePoints";
+import EmotionalCheckIn from "@/components/selfcare/EmotionalCheckIn";
+import MicroRitual from "@/components/selfcare/MicroRitual";
+import PillarBalance from "@/components/selfcare/PillarBalance";
+import ShareRitual from "@/components/selfcare/ShareRitual";
+import WeeklyEvolution from "@/components/selfcare/WeeklyEvolution";
 
-// Self-care tips array (20+ tips)
+// Self-care tips array
 const selfCareTips = [
   "Faça uma pausa de 5 minutos para respirar profundamente",
   "Beba um copo de água agora mesmo",
@@ -34,16 +40,7 @@ const selfCareTips = [
   "Faça algo gentil por alguém",
 ];
 
-// Mood options
-const moods = [
-  { id: "great", emoji: <Laugh className="w-8 h-8" />, label: "Ótimo", color: "text-green-400" },
-  { id: "good", emoji: <Smile className="w-8 h-8" />, label: "Bem", color: "text-lime-400" },
-  { id: "neutral", emoji: <Meh className="w-8 h-8" />, label: "Normal", color: "text-yellow-400" },
-  { id: "bad", emoji: <Frown className="w-8 h-8" />, label: "Mal", color: "text-orange-400" },
-  { id: "terrible", emoji: <Angry className="w-8 h-8" />, label: "Péssimo", color: "text-red-400" },
-];
-
-// Categories
+// Categories (kept from original)
 const categories = [
   { id: "body", name: "Corpo", icon: Activity, color: "from-green-400 to-emerald-500", activities: ["Exercício", "Alongamento", "Caminhada", "Yoga"] },
   { id: "mind", name: "Mente", icon: Brain, color: "from-blue-400 to-indigo-500", activities: ["Meditação", "Leitura", "Aprendizado", "Jogos mentais"] },
@@ -51,7 +48,7 @@ const categories = [
   { id: "creative", name: "Criativo", icon: Palette, color: "from-purple-400 to-violet-500", activities: ["Desenhar", "Escrever", "Cozinhar", "Artesanato"] },
 ];
 
-// Community challenges
+// Community challenges (kept from original)
 const challenges = [
   { id: "1", name: "7 Dias de Meditação", participants: 234, days: 7, category: "mind" },
   { id: "2", name: "30 Dias de Gratidão", participants: 512, days: 30, category: "emotional" },
@@ -62,340 +59,234 @@ const challenges = [
 const SelfCare = () => {
   const [currentTip, setCurrentTip] = useState("");
   const [tipCompleted, setTipCompleted] = useState(false);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [joinedChallenges, setJoinedChallenges] = useState<string[]>([]);
+
+  // New immersive state
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [note, setNote] = useState("");
   const [energyLevel, setEnergyLevel] = useState(5);
   const [gratitudes, setGratitudes] = useState(["", "", ""]);
-  const [joinedChallenges, setJoinedChallenges] = useState<string[]>([]);
-  const [weeklyData, setWeeklyData] = useState([
-    { day: "Seg", mood: 4, energy: 7 },
-    { day: "Ter", mood: 3, energy: 5 },
-    { day: "Qua", mood: 4, energy: 6 },
-    { day: "Qui", mood: 5, energy: 8 },
-    { day: "Sex", mood: 4, energy: 7 },
-    { day: "Sáb", mood: 5, energy: 9 },
-    { day: "Dom", mood: 0, energy: 0 },
-  ]);
+  const [checkInSaved, setCheckInSaved] = useState(false);
 
-  // Get random tip on mount
+  const {
+    todayCheckIn,
+    weeklyCheckIns,
+    todayPillarActions,
+    weeklyPillarActions,
+    loading,
+    saveCheckIn,
+    completeRitual,
+    addPillarAction,
+    refetch,
+  } = useSelfCare();
+
+  const { awardPoints } = usePoints();
+
+  // Load existing data
   useEffect(() => {
-    const randomTip = selfCareTips[Math.floor(Math.random() * selfCareTips.length)];
-    setCurrentTip(randomTip);
-
-    // Load data from localStorage
-    const savedChallenges = localStorage.getItem("vidaflow_challenges");
-    if (savedChallenges) {
-      setJoinedChallenges(JSON.parse(savedChallenges));
+    if (todayCheckIn) {
+      setSelectedEmotion(todayCheckIn.emotional_state);
+      setNote(todayCheckIn.note || "");
+      setEnergyLevel(todayCheckIn.energy_level);
+      setGratitudes(
+        todayCheckIn.gratitudes.length >= 3
+          ? todayCheckIn.gratitudes
+          : [...todayCheckIn.gratitudes, ...Array(3 - todayCheckIn.gratitudes.length).fill("")]
+      );
+      setCheckInSaved(true);
     }
+  }, [todayCheckIn]);
+
+  // Random tip on mount
+  useEffect(() => {
+    setCurrentTip(selfCareTips[Math.floor(Math.random() * selfCareTips.length)]);
+    const saved = localStorage.getItem("vidaflow_challenges");
+    if (saved) setJoinedChallenges(JSON.parse(saved));
   }, []);
 
-  const handleCompleteTip = () => {
-    setTipCompleted(true);
-    
-    // Add points
-    const currentPoints = parseInt(localStorage.getItem("vidaflow_points") || "0");
-    localStorage.setItem("vidaflow_points", (currentPoints + 10).toString());
-
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ["#a855f7", "#ec4899", "#3b82f6"],
-    });
-
-    toast({
-      title: "Parabéns! 🎉",
-      description: "+10 pontos por cuidar de você!",
-    });
-  };
-
-  const handleNewTip = () => {
-    const randomTip = selfCareTips[Math.floor(Math.random() * selfCareTips.length)];
-    setCurrentTip(randomTip);
-    setTipCompleted(false);
-  };
-
-  const handleJoinChallenge = (challengeId: string) => {
-    const updated = [...joinedChallenges, challengeId];
-    setJoinedChallenges(updated);
-    localStorage.setItem("vidaflow_challenges", JSON.stringify(updated));
-
-    toast({
-      title: "Você entrou no desafio! 💪",
-      description: "Boa sorte na sua jornada!",
-    });
-  };
-
-  const handleSaveCheckIn = () => {
-    if (!selectedMood) {
-      toast({
-        title: "Selecione seu humor",
-        description: "Como você está se sentindo hoje?",
-        variant: "destructive",
-      });
+  const handleSaveCheckIn = async () => {
+    if (!selectedEmotion) {
+      toast({ title: "Selecione como você está", description: "Escolha um estado emocional", variant: "destructive" });
       return;
     }
 
-    const moodValue = moods.findIndex(m => m.id === selectedMood) + 1;
-    const today = new Date().getDay();
-    const dayIndex = today === 0 ? 6 : today - 1;
+    try {
+      await saveCheckIn({
+        emotional_state: selectedEmotion,
+        note,
+        energy_level: energyLevel,
+        gratitudes,
+      });
 
-    const updatedData = [...weeklyData];
-    updatedData[dayIndex] = {
-      ...updatedData[dayIndex],
-      mood: 6 - moodValue,
-      energy: energyLevel,
-    };
-    setWeeklyData(updatedData);
+      setCheckInSaved(true);
 
-    // Calculate self-care score and save
-    const selfCareScore = Math.round(((6 - moodValue) / 5 * 50) + (energyLevel / 10 * 50));
-    localStorage.setItem("vidaflow_selfcare_score", selfCareScore.toString());
+      // Award points for check-in
+      const today = new Date().toISOString().split("T")[0];
+      await awardPoints("selfcare_checkin" as any, `checkin-${today}`);
 
-    toast({
-      title: "Check-in salvo! ✨",
-      description: "Continue acompanhando sua evolução!",
-    });
+      confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 }, colors: ["#7f1d1d", "#1e3a8a", "#f59e0b"] });
+      toast({ title: "Check-in salvo ✨", description: "Seu momento de reconexão foi registrado" });
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    }
+  };
+
+  const handleCompleteRitual = async (type: string) => {
+    try {
+      await completeRitual(type);
+      const today = new Date().toISOString().split("T")[0];
+      await awardPoints("selfcare_ritual" as any, `ritual-${today}`);
+      toast({ title: "Ritual concluído 🌿", description: "+5 pontos por cuidar de você" });
+      refetch();
+    } catch {
+      toast({ title: "Erro", variant: "destructive" });
+    }
+  };
+
+  const handleAddPillarAction = async (pillar: "mind" | "body" | "energy", text: string) => {
+    try {
+      await addPillarAction(pillar, text);
+      await awardPoints("selfcare_pillar" as any, `pillar-${pillar}-${text}-${new Date().toISOString().split("T")[0]}`);
+      toast({ title: "Ação registrada ✓" });
+    } catch {
+      toast({ title: "Erro", variant: "destructive" });
+    }
+  };
+
+  const handleCompleteTip = () => {
+    setTipCompleted(true);
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 }, colors: ["#a855f7", "#ec4899", "#3b82f6"] });
+    toast({ title: "Parabéns! 🎉", description: "+10 pontos por cuidar de você!" });
+  };
+
+  const handleNewTip = () => {
+    setCurrentTip(selfCareTips[Math.floor(Math.random() * selfCareTips.length)]);
+    setTipCompleted(false);
+  };
+
+  const handleJoinChallenge = (id: string) => {
+    const updated = [...joinedChallenges, id];
+    setJoinedChallenges(updated);
+    localStorage.setItem("vidaflow_challenges", JSON.stringify(updated));
+    toast({ title: "Você entrou no desafio! 💪", description: "Boa sorte na sua jornada!" });
   };
 
   return (
     <DashboardLayout activeNav="/selfcare">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6 animate-fade-in">
-          <div className="p-3 rounded-xl logo-gradient">
-            <Heart className="w-6 h-6 text-white" />
+      <div className="max-w-2xl mx-auto">
+        {/* Immersive Header */}
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Leaf className="w-7 h-7 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Autocuidado</h1>
-            <p className="text-sm text-muted-foreground">Cuide de você todos os dias</p>
-          </div>
+          <h1 className="text-2xl font-light tracking-wide mb-1">Autocuidado</h1>
+          <p className="text-sm text-muted-foreground font-light">Seu ritual diário de reconexão</p>
         </div>
 
-        {/* Daily Tip */}
+        {/* SECTION 1: Emotional Check-In */}
+        <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up">
+          <EmotionalCheckIn
+            selectedEmotion={selectedEmotion}
+            onSelectEmotion={setSelectedEmotion}
+            note={note}
+            onNoteChange={setNote}
+            energyLevel={energyLevel}
+            onEnergyChange={setEnergyLevel}
+            gratitudes={gratitudes}
+            onGratitudesChange={setGratitudes}
+            onSave={handleSaveCheckIn}
+            alreadySaved={checkInSaved}
+          />
+        </div>
+
+        {/* SECTION 2: Micro-Ritual (only after check-in) */}
+        {checkInSaved && selectedEmotion && (
+          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-100">
+            <MicroRitual
+              emotionalState={selectedEmotion}
+              ritualCompleted={todayCheckIn?.ritual_completed || false}
+              onCompleteRitual={handleCompleteRitual}
+            />
+            <ShareRitual ritualCompleted={todayCheckIn?.ritual_completed || false} />
+          </div>
+        )}
+
+        {/* SECTION 3: Pillar Balance */}
+        {checkInSaved && (
+          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-200">
+            <PillarBalance
+              todayActions={todayPillarActions}
+              weeklyActions={weeklyPillarActions}
+              onAddAction={handleAddPillarAction}
+            />
+          </div>
+        )}
+
+        {/* SECTION 4: Weekly Evolution */}
+        <div className="glass-card p-6 mb-6 animate-slide-up animation-delay-200">
+          <WeeklyEvolution weeklyCheckIns={weeklyCheckIns} />
+        </div>
+
+        {/* Daily Tip (kept) */}
         <div className="glass-card p-6 mb-6 animate-slide-up">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-5 h-5 text-yellow-400" />
-            <h3 className="font-semibold">Dica do Dia</h3>
+            <h3 className="font-medium text-sm">Dica do Dia</h3>
           </div>
-          
-          <p className="text-lg mb-4">{currentTip}</p>
-          
+          <p className="text-sm mb-4 text-foreground/80">{currentTip}</p>
           <div className="flex gap-3">
             {!tipCompleted ? (
-              <button
-                onClick={handleCompleteTip}
-                className="btn-gradient px-5 py-2 rounded-xl flex items-center gap-2 hover:scale-105 transition-transform"
-              >
+              <button onClick={handleCompleteTip} className="btn-gradient px-4 py-2 rounded-lg flex items-center gap-2 text-sm hover:scale-105 transition-transform">
                 <CheckCircle className="w-4 h-4" />
-                Marcar como feito (+10 pts)
+                Feito
               </button>
             ) : (
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">Concluído!</span>
-              </div>
+              <span className="text-sm text-primary flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Concluído!</span>
             )}
-            <button
-              onClick={handleNewTip}
-              className="px-5 py-2 rounded-xl bg-glass hover:bg-glass-hover transition-all hover:scale-105"
-            >
-              Nova dica
-            </button>
+            <button onClick={handleNewTip} className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-sm transition-all">Nova dica</button>
           </div>
         </div>
 
-        {/* Daily Check-in */}
-        <div className="glass-card p-6 mb-6 animate-slide-up animation-delay-100">
-          <h3 className="font-semibold mb-4">Check-in Diário</h3>
-          
-          {/* Mood Selection */}
-          <div className="mb-6">
-            <p className="text-sm text-muted-foreground mb-3">Como você está se sentindo?</p>
-            <div className="flex justify-center gap-4">
-              {moods.map((mood) => (
-                <button
-                  key={mood.id}
-                  onClick={() => setSelectedMood(mood.id)}
-                  className={cn(
-                    "p-3 rounded-xl transition-all hover:scale-110",
-                    selectedMood === mood.id
-                      ? `bg-glass border-2 border-primary ${mood.color}`
-                      : "bg-glass/50 text-muted-foreground hover:bg-glass"
-                  )}
-                >
-                  <div className={cn("transition-colors", selectedMood === mood.id && mood.color)}>
-                    {mood.emoji}
-                  </div>
-                  <p className="text-xs mt-1">{mood.label}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Energy Slider */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <p className="text-sm text-muted-foreground">Nível de energia</p>
-              <span className="font-bold text-lg">{energyLevel}/10</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              value={energyLevel}
-              onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
-              className="w-full h-2 bg-glass rounded-full appearance-none cursor-pointer accent-primary"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>Baixa</span>
-              <span>Alta</span>
-            </div>
-          </div>
-
-          {/* Gratitudes */}
-          <div className="mb-6">
-            <p className="text-sm text-muted-foreground mb-3">3 coisas pelas quais sou grato(a):</p>
-            <div className="space-y-2">
-              {gratitudes.map((g, i) => (
-                <input
-                  key={i}
-                  type="text"
-                  value={g}
-                  onChange={(e) => {
-                    const updated = [...gratitudes];
-                    updated[i] = e.target.value;
-                    setGratitudes(updated);
-                  }}
-                  placeholder={`Gratidão ${i + 1}...`}
-                  className="w-full glass-input px-4 py-2 rounded-xl"
-                />
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={handleSaveCheckIn}
-            className="w-full btn-gradient py-3 rounded-xl font-medium hover:scale-[1.02] transition-transform"
-          >
-            Salvar Check-in
-          </button>
-        </div>
-
-        {/* Weekly Chart */}
-        <div className="glass-card p-6 mb-6 animate-slide-up animation-delay-200">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold">Evolução Semanal</h3>
-          </div>
-          
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyData}>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="mood" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={3}
-                  dot={{ fill: 'hsl(var(--primary))' }}
-                  name="Humor"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="energy" 
-                  stroke="hsl(var(--accent))" 
-                  strokeWidth={3}
-                  dot={{ fill: 'hsl(var(--accent))' }}
-                  name="Energia"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          
-          <div className="flex justify-center gap-6 mt-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary" />
-              <span className="text-sm text-muted-foreground">Humor</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-accent" />
-              <span className="text-sm text-muted-foreground">Energia</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {categories.map((cat, index) => {
+        {/* Categories (kept) */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {categories.map((cat, i) => {
             const Icon = cat.icon;
             return (
-              <div
-                key={cat.id}
-                className="glass-card p-4 animate-slide-up hover:scale-105 transition-transform cursor-pointer"
-                style={{ animationDelay: `${(index + 3) * 100}ms` }}
-              >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center mb-3`}>
-                  <Icon className="w-6 h-6 text-white" />
+              <div key={cat.id} className="glass-card p-4 animate-slide-up hover:scale-[1.02] transition-transform" style={{ animationDelay: `${(i + 3) * 100}ms` }}>
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center mb-2`}>
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="font-semibold mb-2">{cat.name}</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  {cat.activities.map(a => (
-                    <li key={a}>• {a}</li>
-                  ))}
+                <h4 className="font-medium text-sm mb-1">{cat.name}</h4>
+                <ul className="text-xs text-muted-foreground space-y-0.5">
+                  {cat.activities.map(a => <li key={a}>• {a}</li>)}
                 </ul>
               </div>
             );
           })}
         </div>
 
-        {/* Community Challenges */}
-        <div className="glass-card p-6 animate-slide-up animation-delay-300">
-          <h3 className="font-semibold mb-4">Desafios da Comunidade</h3>
-          <div className="space-y-3">
+        {/* Community Challenges (kept) */}
+        <div className="glass-card p-6 animate-slide-up">
+          <h3 className="font-medium text-sm mb-4">Desafios da Comunidade</h3>
+          <div className="space-y-2">
             {challenges.map((challenge) => {
               const isJoined = joinedChallenges.includes(challenge.id);
               const category = categories.find(c => c.id === challenge.category);
-              
               return (
-                <div
-                  key={challenge.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-xl transition-all",
-                    isJoined ? "bg-primary/20 border border-primary/30" : "bg-glass hover:bg-glass-hover"
-                  )}
-                >
+                <div key={challenge.id} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", isJoined ? "bg-primary/10 border border-primary/20" : "bg-muted/30 hover:bg-muted/50")}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${category?.color} flex items-center justify-center`}>
-                      {category && <category.icon className="w-5 h-5 text-white" />}
+                    <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${category?.color} flex items-center justify-center`}>
+                      {category && <category.icon className="w-4 h-4 text-white" />}
                     </div>
                     <div>
-                      <p className="font-medium">{challenge.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {challenge.participants} participantes • {challenge.days} dias
-                      </p>
+                      <p className="font-medium text-sm">{challenge.name}</p>
+                      <p className="text-xs text-muted-foreground">{challenge.participants} participantes · {challenge.days} dias</p>
                     </div>
                   </div>
-                  
                   {isJoined ? (
-                    <span className="text-xs font-medium text-primary flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4" />
-                      Participando
-                    </span>
+                    <span className="text-xs text-primary flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />Participando</span>
                   ) : (
-                    <button
-                      onClick={() => handleJoinChallenge(challenge.id)}
-                      className="px-4 py-2 rounded-lg bg-glass hover:bg-glass-hover text-sm font-medium transition-all hover:scale-105"
-                    >
-                      Participar
-                    </button>
+                    <button onClick={() => handleJoinChallenge(challenge.id)} className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs font-medium transition-all">Participar</button>
                   )}
                 </div>
               );

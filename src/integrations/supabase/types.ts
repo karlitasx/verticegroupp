@@ -706,6 +706,72 @@ export type Database = {
         }
         Relationships: []
       }
+      selfcare_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          emotional_state: string
+          energy_level: number | null
+          gratitudes: string[] | null
+          id: string
+          note: string | null
+          ritual_completed: boolean | null
+          ritual_type: string | null
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          emotional_state: string
+          energy_level?: number | null
+          gratitudes?: string[] | null
+          id?: string
+          note?: string | null
+          ritual_completed?: boolean | null
+          ritual_type?: string | null
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          emotional_state?: string
+          energy_level?: number | null
+          gratitudes?: string[] | null
+          id?: string
+          note?: string | null
+          ritual_completed?: boolean | null
+          ritual_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      selfcare_pillar_actions: {
+        Row: {
+          action_date: string
+          action_text: string
+          created_at: string
+          id: string
+          pillar: string
+          user_id: string
+        }
+        Insert: {
+          action_date?: string
+          action_text: string
+          created_at?: string
+          id?: string
+          pillar: string
+          user_id: string
+        }
+        Update: {
+          action_date?: string
+          action_text?: string
+          created_at?: string
+          id?: string
+          pillar?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
