@@ -1,16 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Bot, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Bot, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/veve-chat`;
 
-const suggestedQuestions = [
-  "💰 Quanto eu gastei este mês?",
+const fallbackQuestions = [
+  "💰 Como economizar dinheiro?",
   "📊 Me dê dicas de investimento",
   "🏦 Como montar uma reserva de emergência?",
   "📋 Explique o método 50/30/20",
@@ -21,8 +22,40 @@ const VeveAssistant = () => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>(fallbackQuestions);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load dynamic suggestions when chat opens
+  useEffect(() => {
+    if (!isOpen || messages.length > 0) return;
+    let cancelled = false;
+    const loadSuggestions = async () => {
+      setSuggestionsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/veve-suggestions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({}),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (!cancelled && data.suggestions?.length) setSuggestions(data.suggestions);
+        }
+      } catch (e) {
+        console.error("Failed to load suggestions:", e);
+      } finally {
+        if (!cancelled) setSuggestionsLoading(false);
+      }
+    };
+    loadSuggestions();
+    return () => { cancelled = true; };
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -184,15 +217,21 @@ const VeveAssistant = () => {
                   </p>
                 </div>
                 <div className="w-full space-y-2">
-                  {suggestedQuestions.map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => handleSend(q)}
-                      className="w-full text-left px-4 py-2.5 rounded-xl border border-border text-sm hover:bg-muted/50 transition-colors"
-                    >
-                      {q}
-                    </button>
-                  ))}
+                  {suggestionsLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    suggestions.map((q, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSend(q)}
+                        className="w-full text-left px-4 py-2.5 rounded-xl border border-border text-sm hover:bg-muted/50 transition-colors"
+                      >
+                        {q}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             )}
