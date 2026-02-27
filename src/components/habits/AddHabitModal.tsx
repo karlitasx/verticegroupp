@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AddHabitModalProps {
@@ -13,21 +13,38 @@ export interface NewHabit {
   emoji: string;
   category: string;
   frequency: string;
+  frequencyType: "daily" | "specific_days" | "times_per_week" | "interval";
+  frequencyDays?: string[];
+  frequencyTimesPerWeek?: number;
+  frequencyIntervalDays?: number;
+  goalDays?: number;
+  motivation?: string;
   reminderTime?: string;
 }
 
 const categories = [
-  { id: "health", name: "Saúde", color: "bg-green-500", emoji: "💪" },
-  { id: "productivity", name: "Produtividade", color: "bg-blue-500", emoji: "⚡" },
-  { id: "spiritual", name: "Espiritual", color: "bg-purple-500", emoji: "🧘" },
-  { id: "financial", name: "Financeiro", color: "bg-yellow-500", emoji: "💰" },
-  { id: "selfcare", name: "Autocuidado", color: "bg-pink-500", emoji: "🌸" },
+  { id: "health", name: "Saúde", emoji: "💪" },
+  { id: "productivity", name: "Produtividade", emoji: "⚡" },
+  { id: "spiritual", name: "Espiritual", emoji: "🧘" },
+  { id: "financial", name: "Financeiro", emoji: "💰" },
+  { id: "selfcare", name: "Autocuidado", emoji: "🌸" },
 ];
 
-const frequencies = [
+const frequencyOptions = [
   { id: "daily", name: "Diário" },
-  { id: "weekly", name: "Semanal" },
-  { id: "custom", name: "Personalizado" },
+  { id: "specific_days", name: "Dias específicos" },
+  { id: "times_per_week", name: "X vezes/semana" },
+  { id: "interval", name: "Intervalo" },
+] as const;
+
+const weekDays = [
+  { id: "mon", name: "Seg" },
+  { id: "tue", name: "Ter" },
+  { id: "wed", name: "Qua" },
+  { id: "thu", name: "Qui" },
+  { id: "fri", name: "Sex" },
+  { id: "sat", name: "Sáb" },
+  { id: "sun", name: "Dom" },
 ];
 
 const emojis = ["💧", "🏃", "📚", "🧘", "💰", "🎯", "💪", "🌙", "☀️", "🍎", "✍️", "🎨", "🌸", "💆", "🧠", "❤️"];
@@ -36,8 +53,26 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🎯");
   const [category, setCategory] = useState("health");
-  const [frequency, setFrequency] = useState("daily");
+  const [frequencyType, setFrequencyType] = useState<NewHabit["frequencyType"]>("daily");
+  const [frequencyDays, setFrequencyDays] = useState<string[]>([]);
+  const [frequencyTimesPerWeek, setFrequencyTimesPerWeek] = useState(3);
+  const [frequencyIntervalDays, setFrequencyIntervalDays] = useState(2);
+  const [goalDays, setGoalDays] = useState<string>("");
+  const [motivation, setMotivation] = useState("");
   const [reminderTime, setReminderTime] = useState("");
+
+  const resetForm = () => {
+    setName("");
+    setEmoji("🎯");
+    setCategory("health");
+    setFrequencyType("daily");
+    setFrequencyDays([]);
+    setFrequencyTimesPerWeek(3);
+    setFrequencyIntervalDays(2);
+    setGoalDays("");
+    setMotivation("");
+    setReminderTime("");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,35 +82,39 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
       name: name.trim(),
       emoji,
       category,
-      frequency,
+      frequency: frequencyType,
+      frequencyType,
+      frequencyDays: frequencyType === "specific_days" ? frequencyDays : undefined,
+      frequencyTimesPerWeek: frequencyType === "times_per_week" ? frequencyTimesPerWeek : undefined,
+      frequencyIntervalDays: frequencyType === "interval" ? frequencyIntervalDays : undefined,
+      goalDays: goalDays ? parseInt(goalDays) : undefined,
+      motivation: motivation.trim() || undefined,
       reminderTime: reminderTime || undefined,
     });
 
-    // Reset form
-    setName("");
-    setEmoji("🎯");
-    setCategory("health");
-    setFrequency("daily");
-    setReminderTime("");
+    resetForm();
     onClose();
+  };
+
+  const toggleDay = (dayId: string) => {
+    setFrequencyDays((prev) =>
+      prev.includes(dayId) ? prev.filter((d) => d !== dayId) : [...prev, dayId]
+    );
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md glass-card p-6 animate-scale-in max-h-[90vh] overflow-y-auto">
-        {/* Close button */}
+      <div className="relative w-full max-w-lg glass-card p-6 animate-scale-in max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-glass-hover transition-all duration-300"
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-muted transition-all"
         >
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -85,9 +124,7 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Emoji selector */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Ícone
-            </label>
+            <label className="text-sm text-muted-foreground mb-2 block">Ícone</label>
             <div className="flex flex-wrap gap-2">
               {emojis.map((e) => (
                 <button
@@ -95,10 +132,10 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
                   type="button"
                   onClick={() => setEmoji(e)}
                   className={cn(
-                    "w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all duration-300",
+                    "w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all",
                     emoji === e
-                      ? "bg-primary/30 ring-2 ring-primary scale-110"
-                      : "bg-glass hover:bg-glass-hover hover:scale-105"
+                      ? "bg-[hsl(345,60%,35%)]/20 ring-2 ring-[hsl(345,60%,35%)] scale-110"
+                      : "bg-muted hover:bg-muted/80 hover:scale-105"
                   )}
                 >
                   {e}
@@ -107,25 +144,21 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
             </div>
           </div>
 
-          {/* Name input */}
+          {/* Name */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Nome do hábito
-            </label>
+            <label className="text-sm text-muted-foreground mb-2 block">Nome do hábito</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Beber 2L de água"
-              className="w-full px-4 py-3 glass-input"
+              className="w-full px-4 py-3 bg-muted rounded-xl outline-none focus:ring-2 focus:ring-[hsl(220,70%,50%)] transition-all"
             />
           </div>
 
-          {/* Category selector - Now with 5 categories */}
+          {/* Category */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Categoria
-            </label>
+            <label className="text-sm text-muted-foreground mb-2 block">Categoria</label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <button
@@ -133,53 +166,127 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
                   type="button"
                   onClick={() => setCategory(cat.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300",
+                    "flex items-center gap-2 px-4 py-3 rounded-xl transition-all text-sm font-medium",
                     category === cat.id
-                      ? `${cat.color}/30 ring-2 ring-current`
-                      : "bg-glass hover:bg-glass-hover"
+                      ? "bg-[hsl(220,70%,50%)]/20 ring-2 ring-[hsl(220,70%,50%)] text-[hsl(220,70%,50%)]"
+                      : "bg-muted hover:bg-muted/80"
                   )}
-                  style={{
-                    color: category === cat.id 
-                      ? cat.id === "selfcare" ? "rgb(236, 72, 153)" // pink-500
-                      : cat.id === "health" ? "rgb(34, 197, 94)" // green-500
-                      : cat.id === "productivity" ? "rgb(59, 130, 246)" // blue-500
-                      : cat.id === "spiritual" ? "rgb(168, 85, 247)" // purple-500
-                      : "rgb(234, 179, 8)" // yellow-500
-                      : undefined,
-                  }}
                 >
                   <span>{cat.emoji}</span>
-                  <span className="text-sm font-medium">{cat.name}</span>
+                  {cat.name}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Frequency selector */}
+          {/* Frequency */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Frequência
-            </label>
-            <div className="flex gap-2">
-              {frequencies.map((freq) => (
+            <label className="text-sm text-muted-foreground mb-2 block">Frequência</label>
+            <div className="grid grid-cols-2 gap-2">
+              {frequencyOptions.map((f) => (
                 <button
-                  key={freq.id}
+                  key={f.id}
                   type="button"
-                  onClick={() => setFrequency(freq.id)}
+                  onClick={() => setFrequencyType(f.id)}
                   className={cn(
-                    "flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
-                    frequency === freq.id
-                      ? "btn-gradient"
-                      : "bg-glass hover:bg-glass-hover text-muted-foreground"
+                    "px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    frequencyType === f.id
+                      ? "bg-[hsl(345,60%,35%)] text-white"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
                   )}
                 >
-                  {freq.name}
+                  {f.name}
                 </button>
               ))}
             </div>
+
+            {/* Specific days */}
+            {frequencyType === "specific_days" && (
+              <div className="flex gap-1.5 mt-3">
+                {weekDays.map((day) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => toggleDay(day.id)}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg text-xs font-medium transition-all",
+                      frequencyDays.includes(day.id)
+                        ? "bg-[hsl(220,70%,50%)] text-white"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {day.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Times per week */}
+            {frequencyType === "times_per_week" && (
+              <div className="flex items-center gap-3 mt-3">
+                <input
+                  type="range"
+                  min={1}
+                  max={6}
+                  value={frequencyTimesPerWeek}
+                  onChange={(e) => setFrequencyTimesPerWeek(Number(e.target.value))}
+                  className="flex-1 accent-[hsl(220,70%,50%)]"
+                />
+                <span className="text-sm font-semibold w-20 text-center">
+                  {frequencyTimesPerWeek}x / semana
+                </span>
+              </div>
+            )}
+
+            {/* Interval */}
+            {frequencyType === "interval" && (
+              <div className="flex items-center gap-3 mt-3">
+                <span className="text-sm text-muted-foreground">A cada</span>
+                <input
+                  type="number"
+                  min={2}
+                  max={30}
+                  value={frequencyIntervalDays}
+                  onChange={(e) => setFrequencyIntervalDays(Number(e.target.value))}
+                  className="w-16 px-3 py-2 bg-muted rounded-lg text-center outline-none"
+                />
+                <span className="text-sm text-muted-foreground">dias</span>
+              </div>
+            )}
           </div>
 
-          {/* Reminder time */}
+          {/* Goal */}
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block">Meta (opcional)</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                value={goalDays}
+                onChange={(e) => setGoalDays(e.target.value)}
+                placeholder="Ex: 30"
+                min={1}
+                className="w-24 px-4 py-3 bg-muted rounded-xl outline-none focus:ring-2 focus:ring-[hsl(220,70%,50%)] transition-all"
+              />
+              <span className="text-sm text-muted-foreground">dias consecutivos</span>
+            </div>
+          </div>
+
+          {/* Motivation */}
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[hsl(345,60%,35%)]" />
+              Por que esse hábito é importante para você?
+            </label>
+            <textarea
+              value={motivation}
+              onChange={(e) => setMotivation(e.target.value)}
+              placeholder="Ex: Quero ter mais energia e disposição no dia a dia..."
+              rows={2}
+              className="w-full px-4 py-3 bg-muted rounded-xl outline-none focus:ring-2 focus:ring-[hsl(345,60%,35%)] transition-all resize-none"
+            />
+          </div>
+
+          {/* Reminder */}
           <div>
             <label className="text-sm text-muted-foreground mb-2 block">
               Horário de lembrete (opcional)
@@ -188,7 +295,7 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
               type="time"
               value={reminderTime}
               onChange={(e) => setReminderTime(e.target.value)}
-              className="w-full px-4 py-3 glass-input"
+              className="w-full px-4 py-3 bg-muted rounded-xl outline-none"
             />
           </div>
 
@@ -197,13 +304,15 @@ const AddHabitModal = ({ isOpen, onClose, onAdd }: AddHabitModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 rounded-xl bg-glass hover:bg-glass-hover transition-all duration-300 font-medium"
+              className="flex-1 px-4 py-3 rounded-xl bg-muted hover:bg-muted/80 transition-all font-medium"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 btn-gradient font-medium"
+              disabled={!name.trim()}
+              className="flex-1 px-4 py-3 rounded-xl font-medium text-white transition-all disabled:opacity-40"
+              style={{ background: "linear-gradient(135deg, hsl(345, 60%, 35%), hsl(220, 70%, 50%))" }}
             >
               Criar Hábito
             </button>

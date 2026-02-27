@@ -13,6 +13,12 @@ export interface HabitData {
   reminderTime?: string;
   completed: boolean;
   createdAt: string;
+  frequencyType: "daily" | "specific_days" | "times_per_week" | "interval";
+  frequencyDays?: string[];
+  frequencyTimesPerWeek?: number;
+  frequencyIntervalDays?: number;
+  goalDays?: number;
+  motivation?: string;
 }
 
 const getToday = () => new Date().toISOString().split("T")[0];
@@ -23,7 +29,6 @@ export const useSupabaseHabits = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [todayCompletions, setTodayCompletions] = useState<Set<string>>(new Set());
 
-  // Fetch habits from Supabase
   const fetchHabits = useCallback(async () => {
     if (!user) {
       setHabits([]);
@@ -33,8 +38,7 @@ export const useSupabaseHabits = () => {
 
     try {
       const today = getToday();
-      
-      // Fetch habits
+
       const { data: habitsData, error: habitsError } = await supabase
         .from("habits")
         .select("*")
@@ -44,7 +48,6 @@ export const useSupabaseHabits = () => {
 
       if (habitsError) throw habitsError;
 
-      // Fetch today's completions
       const { data: completionsData, error: completionsError } = await supabase
         .from("habit_completions")
         .select("habit_id")
@@ -56,7 +59,6 @@ export const useSupabaseHabits = () => {
       const completedIds = new Set(completionsData?.map(c => c.habit_id) || []);
       setTodayCompletions(completedIds);
 
-      // Map to HabitData format
       const mappedHabits: HabitData[] = (habitsData || []).map(h => ({
         id: h.id,
         name: h.name,
@@ -68,6 +70,12 @@ export const useSupabaseHabits = () => {
         reminderTime: h.reminder_time || undefined,
         completed: completedIds.has(h.id),
         createdAt: h.created_at,
+        frequencyType: ((h as any).frequency_type || "daily") as HabitData["frequencyType"],
+        frequencyDays: (h as any).frequency_days || undefined,
+        frequencyTimesPerWeek: (h as any).frequency_times_per_week || undefined,
+        frequencyIntervalDays: (h as any).frequency_interval_days || undefined,
+        goalDays: (h as any).goal_days || undefined,
+        motivation: (h as any).motivation || undefined,
       }));
 
       setHabits(mappedHabits);
@@ -82,7 +90,10 @@ export const useSupabaseHabits = () => {
     fetchHabits();
   }, [fetchHabits]);
 
-  const toggleHabit = useCallback(async (id: string): Promise<{ newStreak: number; streakIncreased: boolean }> => {
+  const toggleHabit = useCallback(async (
+    id: string,
+    checkIn?: { mood: string; difficulty: number; note?: string }
+  ): Promise<{ newStreak: number; streakIncreased: boolean }> => {
     if (!user) return { newStreak: 0, streakIncreased: false };
 
     const habit = habits.find(h => h.id === id);
@@ -97,36 +108,37 @@ export const useSupabaseHabits = () => {
 
     try {
       if (newCompleted) {
-        // Mark as completed
         newStreak = habit.streak + 1;
         streakIncreased = true;
         const newBestStreak = Math.max(habit.bestStreak, newStreak);
 
-        // Insert completion record
-        await supabase.from("habit_completions").insert({
+        const insertData: any = {
           habit_id: id,
           user_id: user.id,
           completed_date: today,
-        });
+        };
+        if (checkIn) {
+          insertData.mood = checkIn.mood;
+          insertData.difficulty = checkIn.difficulty;
+          if (checkIn.note) insertData.note = checkIn.note;
+        }
 
-        // Update habit streak
+        await supabase.from("habit_completions").insert(insertData);
+
         await supabase
           .from("habits")
           .update({ streak: newStreak, best_streak: newBestStreak })
           .eq("id", id);
 
-        // Update local state
-        setHabits(prev => prev.map(h => 
-          h.id === id 
+        setHabits(prev => prev.map(h =>
+          h.id === id
             ? { ...h, completed: true, streak: newStreak, bestStreak: newBestStreak }
             : h
         ));
         setTodayCompletions(prev => new Set([...prev, id]));
       } else {
-        // Unmark completion
         newStreak = Math.max(0, habit.streak - 1);
 
-        // Delete completion record
         await supabase
           .from("habit_completions")
           .delete()
@@ -134,13 +146,11 @@ export const useSupabaseHabits = () => {
           .eq("user_id", user.id)
           .eq("completed_date", today);
 
-        // Update habit streak
         await supabase
           .from("habits")
           .update({ streak: newStreak })
           .eq("id", id);
 
-        // Update local state
         setHabits(prev => prev.map(h =>
           h.id === id
             ? { ...h, completed: false, streak: newStreak }
@@ -159,20 +169,40 @@ export const useSupabaseHabits = () => {
     return { newStreak, streakIncreased };
   }, [user, habits]);
 
-  const addHabit = useCallback(async (habit: Omit<HabitData, "id" | "streak" | "bestStreak" | "completed" | "createdAt">) => {
+  const addHabit = useCallback(async (habit: {
+    name: string;
+    emoji: string;
+    category: string;
+    categoryColor: string;
+    reminderTime?: string;
+    frequencyType?: string;
+    frequencyDays?: string[];
+    frequencyTimesPerWeek?: number;
+    frequencyIntervalDays?: number;
+    goalDays?: number;
+    motivation?: string;
+  }) => {
     if (!user) return null;
 
     try {
+      const insertData: any = {
+        user_id: user.id,
+        name: habit.name,
+        emoji: habit.emoji,
+        category: habit.category,
+        category_color: habit.categoryColor,
+        reminder_time: habit.reminderTime || null,
+        frequency_type: habit.frequencyType || "daily",
+        frequency_days: habit.frequencyDays || [],
+        frequency_times_per_week: habit.frequencyTimesPerWeek || null,
+        frequency_interval_days: habit.frequencyIntervalDays || null,
+        goal_days: habit.goalDays || null,
+        motivation: habit.motivation || null,
+      };
+
       const { data, error } = await supabase
         .from("habits")
-        .insert({
-          user_id: user.id,
-          name: habit.name,
-          emoji: habit.emoji,
-          category: habit.category,
-          category_color: habit.categoryColor,
-          reminder_time: habit.reminderTime || null,
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -189,6 +219,12 @@ export const useSupabaseHabits = () => {
         reminderTime: data.reminder_time || undefined,
         completed: false,
         createdAt: data.created_at,
+        frequencyType: ((data as any).frequency_type || "daily") as HabitData["frequencyType"],
+        frequencyDays: (data as any).frequency_days || undefined,
+        frequencyTimesPerWeek: (data as any).frequency_times_per_week || undefined,
+        frequencyIntervalDays: (data as any).frequency_interval_days || undefined,
+        goalDays: (data as any).goal_days || undefined,
+        motivation: (data as any).motivation || undefined,
       };
 
       setHabits(prev => [newHabit, ...prev]);
@@ -201,19 +237,9 @@ export const useSupabaseHabits = () => {
 
   const deleteHabit = useCallback(async (id: string) => {
     if (!user) return;
-
     try {
-      // Delete completions first (cascade should handle this, but be safe)
-      await supabase
-        .from("habit_completions")
-        .delete()
-        .eq("habit_id", id);
-
-      await supabase
-        .from("habits")
-        .delete()
-        .eq("id", id);
-
+      await supabase.from("habit_completions").delete().eq("habit_id", id);
+      await supabase.from("habits").delete().eq("id", id);
       setHabits(prev => prev.filter(h => h.id !== id));
     } catch (error) {
       console.error("Error deleting habit:", error);
@@ -222,7 +248,6 @@ export const useSupabaseHabits = () => {
 
   const updateHabit = useCallback(async (id: string, updates: Partial<HabitData>) => {
     if (!user) return;
-
     try {
       const dbUpdates: Record<string, unknown> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -231,11 +256,7 @@ export const useSupabaseHabits = () => {
       if (updates.categoryColor !== undefined) dbUpdates.category_color = updates.categoryColor;
       if (updates.reminderTime !== undefined) dbUpdates.reminder_time = updates.reminderTime;
 
-      await supabase
-        .from("habits")
-        .update(dbUpdates)
-        .eq("id", id);
-
+      await supabase.from("habits").update(dbUpdates).eq("id", id);
       setHabits(prev => prev.map(h => h.id === id ? { ...h, ...updates } : h));
     } catch (error) {
       console.error("Error updating habit:", error);
@@ -244,7 +265,6 @@ export const useSupabaseHabits = () => {
 
   const getHabitHistory = useCallback(async (habitId: string, days: number = 30) => {
     if (!user) return [];
-
     try {
       const today = new Date();
       const startDate = new Date(today);
@@ -259,27 +279,64 @@ export const useSupabaseHabits = () => {
         .lte("completed_date", today.toISOString().split("T")[0]);
 
       if (error) throw error;
-
       const completedDates = new Set(data?.map(d => d.completed_date) || []);
 
-      // Generate last N days
       const result: { date: string; completed: boolean }[] = [];
       for (let i = 0; i < days; i++) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split("T")[0];
-        result.push({
-          date: dateStr,
-          completed: completedDates.has(dateStr),
-        });
+        result.push({ date: dateStr, completed: completedDates.has(dateStr) });
       }
-
       return result.reverse();
     } catch (error) {
       console.error("Error fetching habit history:", error);
       return [];
     }
   }, [user]);
+
+  const getMonthlyConsistency = useCallback(async (habitId: string): Promise<number> => {
+    if (!user) return 0;
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return 0;
+
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const daysSoFar = now.getDate();
+
+      const { data, error } = await supabase
+        .from("habit_completions")
+        .select("completed_date")
+        .eq("habit_id", habitId)
+        .eq("user_id", user.id)
+        .gte("completed_date", monthStart.toISOString().split("T")[0])
+        .lte("completed_date", now.toISOString().split("T")[0]);
+
+      if (error) throw error;
+      const completions = data?.length || 0;
+
+      // Calculate expected completions based on frequency
+      let expected = daysSoFar;
+      if (habit.frequencyType === "specific_days" && habit.frequencyDays) {
+        const dayMap: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+        let count = 0;
+        for (let d = new Date(monthStart); d <= now; d.setDate(d.getDate() + 1)) {
+          const dayOfWeek = d.getDay();
+          if (habit.frequencyDays.some(fd => dayMap[fd] === dayOfWeek)) count++;
+        }
+        expected = count;
+      } else if (habit.frequencyType === "times_per_week" && habit.frequencyTimesPerWeek) {
+        expected = Math.ceil((daysSoFar / 7) * habit.frequencyTimesPerWeek);
+      } else if (habit.frequencyType === "interval" && habit.frequencyIntervalDays) {
+        expected = Math.ceil(daysSoFar / habit.frequencyIntervalDays);
+      }
+
+      return expected > 0 ? Math.min(Math.round((completions / expected) * 100), 100) : 0;
+    } catch {
+      return 0;
+    }
+  }, [user, habits]);
 
   const getStats = useCallback(() => {
     const completedToday = habits.filter(h => h.completed).length;
@@ -304,6 +361,7 @@ export const useSupabaseHabits = () => {
     deleteHabit,
     updateHabit,
     getHabitHistory,
+    getMonthlyConsistency,
     getStats,
     refetch: fetchHabits,
   };
