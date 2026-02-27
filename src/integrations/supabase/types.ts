@@ -279,6 +279,54 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_cards: {
+        Row: {
+          brand: string
+          card_color: string
+          card_type: string
+          closing_day: number | null
+          created_at: string
+          credit_limit: number | null
+          due_day: number | null
+          id: string
+          is_active: boolean
+          last_digits: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string
+          card_color?: string
+          card_type?: string
+          closing_day?: number | null
+          created_at?: string
+          credit_limit?: number | null
+          due_day?: number | null
+          id?: string
+          is_active?: boolean
+          last_digits?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string
+          card_color?: string
+          card_type?: string
+          closing_day?: number | null
+          created_at?: string
+          credit_limit?: number | null
+          due_day?: number | null
+          id?: string
+          is_active?: boolean
+          last_digits?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       finance_categories: {
         Row: {
           color: string

@@ -12,8 +12,12 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { personalCategories, businessCategories, type FinanceCategory } from "@/lib/financeCategories";
 import { useFinanceCategories, type FinanceCategoryRecord } from "@/hooks/useFinanceCategories";
+import { useFinanceCards, type FinanceCard } from "@/hooks/useFinanceCards";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -45,14 +49,27 @@ const OrganizationTab = ({ financeType }: OrganizationTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<FinanceCategoryRecord | null>(null);
 
-  // Form state
+  // Category form state
   const [formName, setFormName] = useState("");
   const [formIcon, setFormIcon] = useState("Tag");
   const [formColor, setFormColor] = useState("#6b7280");
   const [formType, setFormType] = useState<"income" | "expense">("expense");
 
+  // Card state
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<FinanceCard | null>(null);
+  const [cardName, setCardName] = useState("");
+  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [cardBrand, setCardBrand] = useState("Visa");
+  const [cardLastDigits, setCardLastDigits] = useState("");
+  const [cardColor, setCardColor] = useState("#3b82f6");
+  const [cardLimit, setCardLimit] = useState("");
+  const [cardClosingDay, setCardClosingDay] = useState("1");
+  const [cardDueDay, setCardDueDay] = useState("10");
+
   const { categories: customCategories, isLoaded, addCategory, updateCategory, deleteCategory } =
     useFinanceCategories(financeType);
+  const { cards, isLoaded: cardsLoaded, addCard, updateCard, deleteCard } = useFinanceCards();
 
   // Merge default + custom categories
   const defaultCats = financeType === "business" ? businessCategories : personalCategories;
@@ -122,6 +139,49 @@ const OrganizationTab = ({ financeType }: OrganizationTabProps) => {
       toast.success("Categoria criada!");
     }
     setIsModalOpen(false);
+  };
+
+  // Card helpers
+  const openCreateCardModal = () => {
+    setEditingCard(null);
+    setCardName(""); setCardType("credit"); setCardBrand("Visa");
+    setCardLastDigits(""); setCardColor("#3b82f6");
+    setCardLimit(""); setCardClosingDay("1"); setCardDueDay("10");
+    setIsCardModalOpen(true);
+  };
+
+  const openEditCardModal = (card: FinanceCard) => {
+    setEditingCard(card);
+    setCardName(card.name); setCardType(card.card_type); setCardBrand(card.brand);
+    setCardLastDigits(card.last_digits); setCardColor(card.card_color);
+    setCardLimit(card.credit_limit > 0 ? String(card.credit_limit) : "");
+    setCardClosingDay(String(card.closing_day)); setCardDueDay(String(card.due_day));
+    setIsCardModalOpen(true);
+  };
+
+  const handleSaveCard = async () => {
+    if (!cardName.trim()) { toast.error("Nome do cartão é obrigatório"); return; }
+    const payload = {
+      name: cardName.trim(), card_type: cardType, brand: cardBrand,
+      last_digits: cardLastDigits, card_color: cardColor,
+      credit_limit: parseFloat(cardLimit) || 0,
+      closing_day: parseInt(cardClosingDay) || 1,
+      due_day: parseInt(cardDueDay) || 10,
+      is_active: true,
+    };
+    if (editingCard) {
+      await updateCard(editingCard.id, payload);
+      toast.success("Cartão atualizado!");
+    } else {
+      await addCard(payload);
+      toast.success("Cartão adicionado!");
+    }
+    setIsCardModalOpen(false);
+  };
+
+  const handleDeleteCard = async (id: string) => {
+    await deleteCard(id);
+    toast.success("Cartão excluído!");
   };
 
   const handleDelete = async (id: string) => {
@@ -205,12 +265,78 @@ const OrganizationTab = ({ financeType }: OrganizationTabProps) => {
           />
         </TabsContent>
 
-        <TabsContent value="cards" className="mt-6">
-          <EmptyState
-            icon={CreditCard}
-            title="Cartões em breve"
-            description="Gerencie seus cartões de crédito e débito. Disponível em breve!"
-          />
+        <TabsContent value="cards" className="mt-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold">Cartões</h3>
+              <p className="text-sm text-muted-foreground">Gerencie seus cartões de crédito e débito</p>
+            </div>
+            <Button onClick={openCreateCardModal} className="btn-gradient gap-2 rounded-full">
+              <Plus className="w-4 h-4" />
+              Novo Cartão
+            </Button>
+          </div>
+
+          {!cardsLoaded ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[1, 2].map((i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
+            </div>
+          ) : cards.length === 0 ? (
+            <EmptyState
+              icon={CreditCard}
+              title="Nenhum cartão cadastrado"
+              description="Adicione seus cartões de crédito e débito para organizar seus gastos."
+              action={{ label: "Adicionar Cartão", onClick: openCreateCardModal }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {cards.map((card) => (
+                <div
+                  key={card.id}
+                  className="relative rounded-2xl p-5 text-white overflow-hidden group"
+                  style={{ background: `linear-gradient(135deg, ${card.card_color}, ${card.card_color}cc)` }}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-xs font-medium uppercase tracking-wider opacity-80">
+                      {card.card_type === "credit" ? "Crédito" : "Débito"}
+                    </span>
+                    <span className="text-sm font-bold">{card.brand}</span>
+                  </div>
+                  <p className="text-lg font-mono tracking-widest mb-4">
+                    •••• •••• •••• {card.last_digits || "••••"}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">{card.name}</p>
+                    {card.card_type === "credit" && card.credit_limit > 0 && (
+                      <p className="text-xs opacity-80">
+                        Limite: {card.credit_limit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </p>
+                    )}
+                  </div>
+                  {card.card_type === "credit" && (
+                    <p className="text-[10px] opacity-60 mt-1">
+                      Fecha dia {card.closing_day} · Vence dia {card.due_day}
+                    </p>
+                  )}
+                  {/* Actions overlay */}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openEditCardModal(card)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCard(card.id)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-red-500/50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -334,6 +460,115 @@ const OrganizationTab = ({ financeType }: OrganizationTabProps) => {
               <Button onClick={handleSave} className="flex-1 btn-gradient" disabled={!formName.trim()}>
                 <Check className="w-4 h-4 mr-1" />
                 {editingCat ? "Salvar" : "Criar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Card Modal */}
+      <Dialog open={isCardModalOpen} onOpenChange={setIsCardModalOpen}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingCard ? "Editar Cartão" : "Novo Cartão"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Nome do Cartão</Label>
+              <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Ex: Nubank Crédito" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className="flex gap-2">
+                <button onClick={() => setCardType("credit")}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${cardType === "credit" ? "bg-primary/20 text-primary border border-primary" : "bg-muted hover:bg-muted/80"}`}>
+                  Crédito
+                </button>
+                <button onClick={() => setCardType("debit")}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${cardType === "debit" ? "bg-primary/20 text-primary border border-primary" : "bg-muted hover:bg-muted/80"}`}>
+                  Débito
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Bandeira</Label>
+                <Select value={cardBrand} onValueChange={setCardBrand}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Visa", "Mastercard", "Elo", "Amex", "Hipercard", "Outro"].map((b) => (
+                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Últimos 4 dígitos</Label>
+                <Input value={cardLastDigits} onChange={(e) => setCardLastDigits(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="1234" maxLength={4} />
+              </div>
+            </div>
+
+            {cardType === "credit" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Limite</Label>
+                  <Input type="number" value={cardLimit} onChange={(e) => setCardLimit(e.target.value)} placeholder="5000" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Dia de Fechamento</Label>
+                    <Select value={cardClosingDay} onValueChange={setCardClosingDay}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>Dia {i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Dia de Vencimento</Label>
+                    <Select value={cardDueDay} onValueChange={setCardDueDay}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>Dia {i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <Label>Cor do Cartão</Label>
+              <div className="flex flex-wrap gap-2">
+                {["#3b82f6", "#8b5cf6", "#ef4444", "#22c55e", "#f97316", "#ec4899", "#6366f1", "#14b8a6", "#1e293b", "#6b7280"].map((c) => (
+                  <button key={c} onClick={() => setCardColor(c)}
+                    className={`w-8 h-8 rounded-full transition-all ${cardColor === c ? "ring-2 ring-offset-2 ring-primary" : ""}`}
+                    style={{ backgroundColor: c }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="rounded-2xl p-4 text-white text-sm" style={{ background: `linear-gradient(135deg, ${cardColor}, ${cardColor}cc)` }}>
+              <div className="flex justify-between mb-3">
+                <span className="text-xs uppercase opacity-80">{cardType === "credit" ? "Crédito" : "Débito"}</span>
+                <span className="font-bold text-xs">{cardBrand}</span>
+              </div>
+              <p className="font-mono tracking-widest mb-2">•••• •••• •••• {cardLastDigits || "••••"}</p>
+              <p className="font-medium">{cardName || "Nome do cartão"}</p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button variant="ghost" onClick={() => setIsCardModalOpen(false)} className="flex-1">Cancelar</Button>
+              <Button onClick={handleSaveCard} className="flex-1 btn-gradient" disabled={!cardName.trim()}>
+                <Check className="w-4 h-4 mr-1" />
+                {editingCard ? "Salvar" : "Criar"}
               </Button>
             </div>
           </div>
