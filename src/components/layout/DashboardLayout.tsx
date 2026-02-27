@@ -14,7 +14,7 @@ const DashboardLayout = ({ children, activeNav = "/" }: DashboardLayoutProps) =>
       <Sidebar activeItem={activeNav} />
 
       {/* Main Content */}
-      <main className="pt-14 pb-20 md:pb-6 md:pl-20 lg:pl-56 min-h-screen">
+      <main className="pt-14 pb-20 md:pb-6 md:pl-64 min-h-screen">
         <div className="p-4 md:p-5 lg:p-6 max-w-7xl">
           {children}
         </div>

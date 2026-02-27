@@ -45,7 +45,7 @@ const Header = () => {
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <h1 className="text-lg font-semibold hidden sm:block text-foreground">
-          VidaFlow
+          Vertice Group
         </h1>
       </div>
 
@@ -82,7 +82,7 @@ const Header = () => {
               <>
                 <div className="px-3 py-2">
                   <p className="text-sm font-medium truncate text-foreground">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">Conta VidaFlow</p>
+                  <p className="text-xs text-muted-foreground">Conta Vertice Group</p>
                 </div>
                 <DropdownMenuSeparator />
               </>
