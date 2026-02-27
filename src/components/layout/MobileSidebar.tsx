@@ -8,18 +8,17 @@ import { toast } from "@/hooks/use-toast";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   Home,
-  Target,
   DollarSign,
-  Heart,
-  Award,
-  Trophy,
   User,
-  Sparkles,
+  Play,
   LogOut,
   HelpCircle,
   BookOpen,
   Calendar,
   X,
+  Users,
+  Newspaper,
+  Wallet,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -32,7 +31,7 @@ const sections = [
   {
     titleKey: "Comece aqui!",
     items: [
-      { icon: Sparkles, label: "Primeiros Passos", href: "/" },
+      { icon: Play, label: "Primeiros Passos", href: "/" },
       { icon: User, label: "Apresente-se", href: "/community" },
       { icon: BookOpen, label: "Regras da Comunidade", href: "/community" },
     ],
@@ -41,15 +40,15 @@ const sections = [
     titleKey: "Navegue pela comunidade",
     items: [
       { icon: Home, label: "Feed", href: "/community" },
-      { icon: Trophy, label: "Grupos e Temas", href: "/community" },
+      { icon: Users, label: "Grupos e Temas", href: "/community" },
       { icon: Calendar, label: "Eventos", href: "/agenda" },
-      { icon: Award, label: "Novidades", href: "/community" },
+      { icon: Newspaper, label: "Novidades", href: "/community" },
     ],
   },
   {
     titleKey: "Controle suas finanças",
     items: [
-      { icon: DollarSign, label: "Minhas Finanças", href: "/finances" },
+      { icon: Wallet, label: "Minhas Finanças", href: "/finances" },
     ],
   },
 ];
@@ -80,12 +79,7 @@ const MobileSidebar = ({ open, onOpenChange }: MobileSidebarProps) => {
       <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-background [&>button]:hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground">VidaFlow</span>
-          </div>
+          <span className="text-lg font-bold text-foreground">VidaFlow</span>
           <button
             onClick={() => onOpenChange(false)}
             className="p-1.5 rounded-md hover:bg-muted transition-colors"
@@ -98,7 +92,7 @@ const MobileSidebar = ({ open, onOpenChange }: MobileSidebarProps) => {
         <div className="flex-1 overflow-y-auto py-2">
           {sections.map((section, idx) => (
             <div key={idx} className="px-3 mb-2">
-              <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <p className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-primary">
                 {section.titleKey}
               </p>
               {section.items.map((item) => {
@@ -109,14 +103,14 @@ const MobileSidebar = ({ open, onOpenChange }: MobileSidebarProps) => {
                     key={item.label}
                     onClick={() => handleNavigate(item.href)}
                     className={cn(
-                      "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left transition-colors",
+                      "flex items-center gap-4 w-full px-3 py-3 rounded-lg text-left transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-foreground hover:bg-muted"
                     )}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm">{item.label}</span>
+                    <span className="text-[15px]">{item.label}</span>
                   </button>
                 );
               })}
