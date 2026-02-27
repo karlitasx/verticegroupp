@@ -50,47 +50,49 @@ const EmergencyFundCalculator = () => {
   return (
     <div className="glass-card rounded-2xl p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-violet-500/10">
+      <div className="flex items-start gap-3">
+        <div className="p-2.5 rounded-xl bg-violet-500/10 flex-shrink-0">
           <Shield className="w-5 h-5 text-violet-500" />
         </div>
-        <div className="flex items-center gap-2">
-          <h3 className="font-bold text-lg">Calculadora de Reserva de Emergência</h3>
-          <Tooltip>
-            <TooltipTrigger>
-              <Info className="w-4 h-4 text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>A reserva de emergência é um valor guardado para cobrir despesas imprevistas como demissão, problemas de saúde ou consertos urgentes.</p>
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg">Calculadora de Reserva de Emergência</h3>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="w-4 h-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>A reserva de emergência é um valor guardado para cobrir despesas imprevistas como demissão, problemas de saúde ou consertos urgentes.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Descubra quanto você precisa ter guardado para emergências
+          </p>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground -mt-3 ml-[52px]">
-        Descubra quanto você precisa ter guardado para emergências
-      </p>
 
       {/* Inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div className="space-y-2">
-          <Label className="font-medium">Despesas Fixas Mensais</Label>
+          <Label className="font-semibold">Despesas Fixas Mensais</Label>
           <Input
             type="text"
             value={formatDisplay(monthlyExpenses)}
             onChange={(e) => handleCurrencyInput(e, setMonthlyExpenses)}
-            className="h-12"
+            className="h-12 text-base"
             placeholder="R$ 0,00"
           />
           <p className="text-xs text-muted-foreground">Aluguel, contas, alimentação, transporte...</p>
         </div>
 
         <div className="space-y-2">
-          <Label className="font-medium">Quanto Você Já Tem Guardado</Label>
+          <Label className="font-semibold">Quanto Você Já Tem Guardado</Label>
           <Input
             type="text"
             value={formatDisplay(currentSaved)}
             onChange={(e) => handleCurrencyInput(e, setCurrentSaved)}
-            className="h-12"
+            className="h-12 text-base"
             placeholder="R$ 0,00"
           />
           <p className="text-xs text-muted-foreground">Valor atual da sua reserva de emergência</p>
@@ -98,21 +100,21 @@ const EmergencyFundCalculator = () => {
       </div>
 
       {/* Work Type */}
-      <div className="space-y-2">
-        <Label className="font-medium">Tipo de Trabalho</Label>
-        <div className="grid grid-cols-3 gap-3">
+      <div className="space-y-3">
+        <Label className="font-semibold">Tipo de Trabalho</Label>
+        <div className="flex flex-col gap-3">
           {workTypes.map((wt) => (
             <button
               key={wt.key}
               onClick={() => setWorkType(wt.key)}
               className={`p-4 rounded-xl text-left transition-all border-2 ${
                 workType === wt.key
-                  ? "border-primary bg-primary/5"
+                  ? "border-primary bg-primary/10"
                   : "border-border hover:border-muted-foreground/30"
               }`}
             >
-              <p className="font-medium text-sm">{wt.label}</p>
-              <p className="text-xs text-muted-foreground">{wt.months}</p>
+              <p className={`font-semibold text-sm ${workType === wt.key ? "text-primary" : ""}`}>{wt.label}</p>
+              <p className={`text-xs ${workType === wt.key ? "text-primary/70" : "text-muted-foreground"}`}>{wt.months}</p>
             </button>
           ))}
         </div>
