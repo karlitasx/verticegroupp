@@ -11,6 +11,7 @@ import MicroRitual from "@/components/selfcare/MicroRitual";
 import PillarBalance from "@/components/selfcare/PillarBalance";
 import ShareRitual from "@/components/selfcare/ShareRitual";
 import WeeklyEvolution from "@/components/selfcare/WeeklyEvolution";
+import GymRatsChallenges from "@/components/selfcare/GymRatsChallenges";
 
 // Self-care tips array
 const selfCareTips = [
@@ -40,7 +41,7 @@ const selfCareTips = [
   "Faça algo gentil por alguém",
 ];
 
-// Categories (kept from original)
+// Categories
 const categories = [
   { id: "body", name: "Corpo", icon: Activity, color: "from-green-400 to-emerald-500", activities: ["Exercício", "Alongamento", "Caminhada", "Yoga"] },
   { id: "mind", name: "Mente", icon: Brain, color: "from-blue-400 to-indigo-500", activities: ["Meditação", "Leitura", "Aprendizado", "Jogos mentais"] },
@@ -48,18 +49,10 @@ const categories = [
   { id: "creative", name: "Criativo", icon: Palette, color: "from-purple-400 to-violet-500", activities: ["Desenhar", "Escrever", "Cozinhar", "Artesanato"] },
 ];
 
-// Community challenges (kept from original)
-const challenges = [
-  { id: "1", name: "7 Dias de Meditação", participants: 234, days: 7, category: "mind" },
-  { id: "2", name: "30 Dias de Gratidão", participants: 512, days: 30, category: "emotional" },
-  { id: "3", name: "Desafio Fitness 21 Dias", participants: 189, days: 21, category: "body" },
-  { id: "4", name: "Criar Todo Dia", participants: 87, days: 14, category: "creative" },
-];
-
 const SelfCare = () => {
   const [currentTip, setCurrentTip] = useState("");
   const [tipCompleted, setTipCompleted] = useState(false);
-  const [joinedChallenges, setJoinedChallenges] = useState<string[]>([]);
+  
 
   // New immersive state
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
@@ -100,8 +93,6 @@ const SelfCare = () => {
   // Random tip on mount
   useEffect(() => {
     setCurrentTip(selfCareTips[Math.floor(Math.random() * selfCareTips.length)]);
-    const saved = localStorage.getItem("vidaflow_challenges");
-    if (saved) setJoinedChallenges(JSON.parse(saved));
   }, []);
 
   const handleSaveCheckIn = async () => {
@@ -164,12 +155,8 @@ const SelfCare = () => {
     setTipCompleted(false);
   };
 
-  const handleJoinChallenge = (id: string) => {
-    const updated = [...joinedChallenges, id];
-    setJoinedChallenges(updated);
-    localStorage.setItem("vidaflow_challenges", JSON.stringify(updated));
-    toast({ title: "Você entrou no desafio! 💪", description: "Boa sorte na sua jornada!" });
-  };
+
+
 
   return (
     <DashboardLayout activeNav="/selfcare">
@@ -265,34 +252,8 @@ const SelfCare = () => {
           })}
         </div>
 
-        {/* Community Challenges (kept) */}
-        <div className="glass-card p-6 animate-slide-up">
-          <h3 className="font-medium text-sm mb-4">Desafios da Comunidade</h3>
-          <div className="space-y-2">
-            {challenges.map((challenge) => {
-              const isJoined = joinedChallenges.includes(challenge.id);
-              const category = categories.find(c => c.id === challenge.category);
-              return (
-                <div key={challenge.id} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", isJoined ? "bg-primary/10 border border-primary/20" : "bg-muted/30 hover:bg-muted/50")}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${category?.color} flex items-center justify-center`}>
-                      {category && <category.icon className="w-4 h-4 text-white" />}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{challenge.name}</p>
-                      <p className="text-xs text-muted-foreground">{challenge.participants} participantes · {challenge.days} dias</p>
-                    </div>
-                  </div>
-                  {isJoined ? (
-                    <span className="text-xs text-primary flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />Participando</span>
-                  ) : (
-                    <button onClick={() => handleJoinChallenge(challenge.id)} className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs font-medium transition-all">Participar</button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* GymRats-style Challenges */}
+        <GymRatsChallenges className="mb-6 animate-slide-up" />
       </div>
     </DashboardLayout>
   );
