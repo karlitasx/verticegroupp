@@ -12,6 +12,7 @@ import WishlistTab from "@/components/finances/WishlistTab";
 import MetasKanban from "@/components/finances/MetasKanban";
 import OrganizationTab from "@/components/finances/OrganizationTab";
 import EmergencyFundCalculator from "@/components/finances/EmergencyFundCalculator";
+import BudgetMethods from "@/components/finances/BudgetMethods";
 import FinanceTypeSelector, { type FinanceType } from "@/components/finances/FinanceTypeSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -235,9 +236,6 @@ const Finances = () => {
               </div>
             </>
           )}
-
-          {/* Calculadora sempre visível */}
-          <EmergencyFundCalculator />
         </TabsContent>
 
         {/* Transações */}
@@ -250,12 +248,9 @@ const Finances = () => {
         </TabsContent>
 
         {/* Investimentos */}
-        <TabsContent value="investments" className="animate-fade-in mt-6">
-          <EmptyState
-            icon={BarChart3}
-            title="Investimentos em breve"
-            description="Acompanhe seus investimentos, rendimentos e carteira de ativos. Disponível em breve!"
-          />
+        <TabsContent value="investments" className="animate-fade-in mt-6 space-y-8">
+          <EmergencyFundCalculator />
+          <BudgetMethods />
         </TabsContent>
 
         {/* Metas */}
