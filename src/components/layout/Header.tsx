@@ -1,4 +1,5 @@
-import { Sparkles, Search, User, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Search, User, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -10,8 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
+import MobileSidebar from "./MobileSidebar";
 
 const Header = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -26,6 +29,16 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-background border-b border-border flex items-center px-4 md:px-6">
+      {/* Mobile menu trigger */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="md:hidden p-2 -ml-2 mr-1 rounded-md hover:bg-muted transition-colors"
+      >
+        <Menu className="w-5 h-5 text-foreground" />
+      </button>
+
+      <MobileSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+
       {/* Logo */}
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
