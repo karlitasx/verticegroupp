@@ -176,11 +176,6 @@ const Habits = () => {
           </button>
         </div>
 
-        {/* Upcoming Events Section */}
-        <div className="mb-6">
-          <UpcomingEventsSection />
-        </div>
-
         {/* Progress Bar */}
         {habits.length > 0 && (
           <div className="glass-card p-4 mb-6 animate-slide-up">
@@ -316,6 +311,11 @@ const Habits = () => {
               </div>
             ))
           )}
+        </div>
+
+        {/* Upcoming Events Section - below habits */}
+        <div className="mt-6">
+          <UpcomingEventsSection />
         </div>
       </div>
 
