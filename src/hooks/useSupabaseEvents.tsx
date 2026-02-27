@@ -20,7 +20,7 @@ export const useSupabaseEvents = () => {
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .eq("user_id", user.id)
+        .or(`user_id.eq.${user.id},is_public.eq.true`)
         .order("event_date", { ascending: true });
 
       if (error) throw error;
@@ -37,6 +37,26 @@ export const useSupabaseEvents = () => {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('events-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'events' },
+        () => {
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchEvents]);
 
   const addEvent = async (input: CreateEventInput) => {
     if (!user) return null;

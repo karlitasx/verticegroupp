@@ -8,6 +8,7 @@ import AdminPostsTable from "@/components/admin/AdminPostsTable";
 import AdminUsersTable from "@/components/admin/AdminUsersTable";
 import AdminChallengesSection from "@/components/admin/AdminChallengesSection";
 import AdminAchievementsSection from "@/components/admin/AdminAchievementsSection";
+import AdminEventsSection from "@/components/admin/AdminEventsSection";
 
 const Admin = () => {
   const {
@@ -16,6 +17,7 @@ const Admin = () => {
     users,
     challenges,
     achievements,
+    publicEvents,
     loading,
     refetch,
     hidePost,
@@ -72,11 +74,12 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
             <TabsTrigger value="posts">Moderação</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="challenges">Desafios</TabsTrigger>
             <TabsTrigger value="achievements">Conquistas</TabsTrigger>
+            <TabsTrigger value="events">Eventos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts">
@@ -110,6 +113,10 @@ const Admin = () => {
               onCreate={createAchievement}
               onToggleActive={toggleAchievementActive}
             />
+          </TabsContent>
+
+          <TabsContent value="events">
+            <AdminEventsSection events={publicEvents} onRefetch={refetch} />
           </TabsContent>
         </Tabs>
 

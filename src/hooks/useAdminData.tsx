@@ -70,7 +70,22 @@ export const useAdminData = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [challenges, setChallenges] = useState<AdminChallenge[]>([]);
   const [achievements, setAchievements] = useState<AdminAchievement[]>([]);
+  const [publicEvents, setPublicEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchPublicEvents = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, event_time, is_public")
+        .eq("is_public", true)
+        .order("event_date", { ascending: true });
+      if (error) throw error;
+      setPublicEvents(data || []);
+    } catch (error) {
+      console.error("Error fetching public events:", error);
+    }
+  }, []);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -232,9 +247,10 @@ export const useAdminData = () => {
       fetchUsers(),
       fetchChallenges(),
       fetchAchievements(),
+      fetchPublicEvents(),
     ]);
     setLoading(false);
-  }, [fetchStats, fetchPosts, fetchUsers, fetchChallenges, fetchAchievements]);
+  }, [fetchStats, fetchPosts, fetchUsers, fetchChallenges, fetchAchievements, fetchPublicEvents]);
 
   useEffect(() => {
     if (user) {
@@ -419,6 +435,7 @@ export const useAdminData = () => {
     users,
     challenges,
     achievements,
+    publicEvents,
     loading,
     refetch: fetchAll,
     // Post actions

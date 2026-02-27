@@ -236,12 +236,13 @@ export type Database = {
           event_time: string | null
           id: string
           is_completed: boolean
+          is_public: boolean
           is_recurring: boolean
           recurring_pattern: string | null
           reminder_minutes: number | null
           title: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           category?: string
@@ -253,12 +254,13 @@ export type Database = {
           event_time?: string | null
           id?: string
           is_completed?: boolean
+          is_public?: boolean
           is_recurring?: boolean
           recurring_pattern?: string | null
           reminder_minutes?: number | null
           title: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           category?: string
@@ -270,12 +272,13 @@ export type Database = {
           event_time?: string | null
           id?: string
           is_completed?: boolean
+          is_public?: boolean
           is_recurring?: boolean
           recurring_pattern?: string | null
           reminder_minutes?: number | null
           title?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
