@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useActivityHistory } from "@/hooks/useActivityHistory";
 import { useAchievementsContext } from "@/contexts/AchievementsContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { usePreferences } from "@/contexts/PreferencesContext";
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { 
   User, 
   Camera, 
@@ -30,11 +32,22 @@ import {
   Star,
   TrendingUp,
   Heart,
-  Loader2
+  Loader2,
+  Clock,
+  Calendar,
+  BarChart3,
+  CheckCircle2,
+  MessageSquare,
+  Users,
+  Wallet,
+  CalendarDays,
+  Gift,
 } from "lucide-react";
 import { toast } from "sonner";
 import XPProgressBar from "@/components/achievements/XPProgressBar";
 import { LEVEL_EMOJIS } from "@/types/achievements";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface UserPreferences {
   theme: 'dark' | 'light' | 'system';
@@ -62,6 +75,7 @@ const Profile = () => {
     uploadAvatar 
   } = useProfile();
   const { state, getUnlockedCount, getTotalCount } = useAchievementsContext();
+  const { activities, detailedStats, isLoading: isLoadingActivity } = useActivityHistory();
   const { theme, setTheme } = useThemeContext();
   const { currency, language, setCurrency, setLanguage, t } = usePreferences();
   const [isEditingName, setIsEditingName] = useState(false);
@@ -273,18 +287,26 @@ const Profile = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="stats" className="space-y-4">
-          <TabsList className="bg-card border border-border p-1 w-full">
+          <TabsList className="bg-card border border-border p-1 w-full overflow-x-auto">
             <TabsTrigger value="stats" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              {t('profile.stats')}
+              <TrendingUp className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">{t('profile.stats')}</span>
+              <span className="sm:hidden text-xs">Stats</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Clock className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">Atividades</span>
+              <span className="sm:hidden text-xs">Atividades</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <User className="w-4 h-4 mr-2" />
-              {t('profile.settings')}
+              <User className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">{t('profile.settings')}</span>
+              <span className="sm:hidden text-xs">Config</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Bell className="w-4 h-4 mr-2" />
-              {t('profile.notifications')}
+              <Bell className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">{t('profile.notifications')}</span>
+              <span className="sm:hidden text-xs">Alertas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -355,7 +377,94 @@ const Profile = () => {
             </div>
           </TabsContent>
 
-          {/* Settings Tab */}
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-4 animate-fade-in">
+            {/* Activity History */}
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Histórico Completo de Atividades
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">Todas suas ações na plataforma</p>
+              </CardHeader>
+              <CardContent>
+                {isLoadingActivity ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : activities.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">Nenhuma atividade registrada ainda</p>
+                    <p className="text-muted-foreground/60 text-xs mt-1">Suas ações aparecerão aqui</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {activities.slice(0, 20).map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-lg">
+                          {activity.emoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Calendar className="w-3 h-3" />
+                              {format(new Date(activity.timestamp), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              {format(new Date(activity.timestamp), "HH:mm")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Detailed Stats */}
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Estatísticas Detalhadas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-border">
+                  {[
+                    { label: "Total de curtidas", value: detailedStats.totalLikes, icon: Heart },
+                    { label: "Posts criados", value: detailedStats.postsCreated, icon: MessageSquare },
+                    { label: "Comentários feitos", value: detailedStats.commentsMade, icon: MessageSquare },
+                    { label: "Desafios participando", value: detailedStats.challengesJoined, icon: Trophy },
+                    { label: "Conexões", value: detailedStats.connections, icon: Users },
+                    { label: "Transações registradas", value: detailedStats.transactionsLogged, icon: Wallet },
+                    { label: "Eventos criados", value: detailedStats.eventsCreated, icon: CalendarDays },
+                    { label: "Itens na wishlist", value: detailedStats.wishlistItems, icon: Gift },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <stat.icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">{stat.label}</span>
+                      </div>
+                      <span className="text-sm font-bold text-foreground">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
           <TabsContent value="settings" className="animate-fade-in space-y-4">
             {/* Bio & Interests Card */}
             <Card className="bg-card border-border">
