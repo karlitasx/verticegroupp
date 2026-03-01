@@ -160,18 +160,22 @@ const SelfCare = () => {
 
   return (
     <DashboardLayout activeNav="/selfcare">
-      <div className="max-w-2xl mx-auto">
-        {/* Immersive Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Leaf className="w-7 h-7 text-primary" />
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl logo-gradient">
+              <Leaf className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Autocuidado</h1>
+              <p className="text-sm text-muted-foreground">Seu ritual diário de reconexão</p>
+            </div>
           </div>
-          <h1 className="text-2xl font-light tracking-wide mb-1">Autocuidado</h1>
-          <p className="text-sm text-muted-foreground font-light">Seu ritual diário de reconexão</p>
         </div>
 
         {/* SECTION 1: Emotional Check-In */}
-        <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up">
+        <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up rounded-2xl">
           <EmotionalCheckIn
             selectedEmotion={selectedEmotion}
             onSelectEmotion={setSelectedEmotion}
@@ -188,7 +192,7 @@ const SelfCare = () => {
 
         {/* SECTION 2: Micro-Ritual (only after check-in) */}
         {checkInSaved && selectedEmotion && (
-          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-100">
+          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-100 rounded-2xl">
             <MicroRitual
               emotionalState={selectedEmotion}
               ritualCompleted={todayCheckIn?.ritual_completed || false}
@@ -200,7 +204,7 @@ const SelfCare = () => {
 
         {/* SECTION 3: Pillar Balance */}
         {checkInSaved && (
-          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-200">
+          <div className="glass-card p-6 md:p-8 mb-6 animate-slide-up animation-delay-200 rounded-2xl">
             <PillarBalance
               todayActions={todayPillarActions}
               weeklyActions={weeklyPillarActions}
@@ -210,14 +214,14 @@ const SelfCare = () => {
         )}
 
         {/* SECTION 4: Weekly Evolution */}
-        <div className="glass-card p-6 mb-6 animate-slide-up animation-delay-200">
+        <div className="glass-card p-6 mb-6 animate-slide-up animation-delay-200 rounded-2xl">
           <WeeklyEvolution weeklyCheckIns={weeklyCheckIns} />
         </div>
 
         {/* Daily Tip (kept) */}
-        <div className="glass-card p-6 mb-6 animate-slide-up">
+        <div className="glass-card p-6 mb-6 animate-slide-up rounded-2xl">
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-yellow-400" />
+            <Sparkles className="w-5 h-5 text-warning" />
             <h3 className="font-medium text-sm">Dica do Dia</h3>
           </div>
           <p className="text-sm mb-4 text-foreground/80">{currentTip}</p>
@@ -235,11 +239,11 @@ const SelfCare = () => {
         </div>
 
         {/* Categories (kept) */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {categories.map((cat, i) => {
             const Icon = cat.icon;
             return (
-              <div key={cat.id} className="glass-card p-4 animate-slide-up hover:scale-[1.02] transition-transform" style={{ animationDelay: `${(i + 3) * 100}ms` }}>
+              <div key={cat.id} className="glass-card p-4 animate-slide-up hover:scale-[1.02] transition-transform rounded-2xl" style={{ animationDelay: `${(i + 3) * 100}ms` }}>
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center mb-2`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
