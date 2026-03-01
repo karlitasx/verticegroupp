@@ -63,6 +63,7 @@ export const useAchievementSharing = () => {
     }
 
     try {
+      // Insert into achievement_shares
       const { data, error } = await supabase
         .from("achievement_shares")
         .insert({
@@ -75,7 +76,18 @@ export const useAchievementSharing = () => {
 
       if (error) throw error;
 
-      toast.success("Conquista compartilhada!");
+      // Also create a post in the community feed
+      const postContent = message?.trim()
+        ? `${achievement.emoji} Conquista desbloqueada: ${achievement.name}! ${message.trim()}`
+        : `${achievement.emoji} Conquista desbloqueada: ${achievement.name}! — ${achievement.description}`;
+
+      await supabase.from("posts").insert({
+        user_id: user.id,
+        content: postContent.slice(0, 280),
+        emoji: achievement.emoji,
+      });
+
+      toast.success("Conquista compartilhada na comunidade!");
       await fetchShares();
       return data as AchievementShare;
     } catch (error) {
