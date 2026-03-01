@@ -39,8 +39,8 @@ const EmotionalCheckIn = ({
   return (
     <div className="animate-fade-in">
       {/* Main Question */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-light tracking-wide text-foreground/90 mb-2">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-foreground mb-1">
           Como você está hoje?
         </h2>
         <p className="text-sm text-muted-foreground">
