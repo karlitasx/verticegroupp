@@ -279,8 +279,8 @@ const Habits = () => {
 
               {showCategoryFilter && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowCategoryFilter(false)} />
-                  <div className="absolute left-0 top-full mt-2 w-48 glass-card py-2 z-50 animate-scale-in rounded-xl shadow-lg">
+                  <div className="fixed inset-0 z-10" onClick={() => setShowCategoryFilter(false)} />
+                  <div className="absolute left-0 top-full mt-2 w-48 glass-card py-2 z-20 animate-scale-in rounded-xl">
                     {categoryFilters.map((cat) => (
                       <button
                         key={cat.id}

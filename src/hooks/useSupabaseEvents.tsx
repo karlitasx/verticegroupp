@@ -153,12 +153,11 @@ export const useSupabaseEvents = () => {
 
   const getUpcomingEvents = (days: number = 7) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const futureDate = new Date(today);
+    const futureDate = new Date();
     futureDate.setDate(today.getDate() + days);
 
     return events.filter((e) => {
-      const eventDate = new Date(e.event_date + "T00:00:00");
+      const eventDate = new Date(e.event_date);
       return eventDate >= today && eventDate <= futureDate && !e.is_completed;
     });
   };
